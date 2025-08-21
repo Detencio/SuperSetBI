@@ -6,6 +6,16 @@ This is a Business Intelligence (BI) dashboard application built with a full-sta
 
 Preferred communication style: Simple, everyday language.
 
+# Recent Changes
+
+## Mobile Responsive Design Implementation (August 21, 2025)
+- Updated all pages (Dashboard, Inventory, Collections, Sales) to be fully responsive
+- Implemented collapsible sidebar for mobile with overlay functionality
+- Added mobile-optimized layout with responsive grid systems
+- Enhanced table designs for mobile viewing with hidden/collapsed columns
+- Improved button and form layouts for touch interfaces
+- All components now scale properly from mobile (sm) to desktop (lg) breakpoints
+
 # System Architecture
 
 ## Frontend Architecture

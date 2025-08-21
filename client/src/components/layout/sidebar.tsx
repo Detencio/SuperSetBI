@@ -6,8 +6,12 @@ import {
   TrendingUp, 
   Settings, 
   Users, 
-  LogOut 
+  LogOut,
+  Menu,
+  X
 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const navigation = [
   { name: "Resumen Ejecutivo", href: "/dashboard", icon: BarChart3, current: true },
@@ -24,7 +28,12 @@ const settings = [
   { name: "Usuarios", href: "/users", icon: Users },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const [location] = useLocation();
 
   const isActive = (href: string) => {
@@ -34,20 +43,53 @@ export default function Sidebar() {
     return location === href;
   };
 
+  const handleLinkClick = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="w-64 bg-card shadow-lg flex flex-col">
-      {/* Logo Header */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-superset-blue rounded-lg flex items-center justify-center">
-            <BarChart3 className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-text-primary">Superset BI</h1>
-            <p className="text-sm text-text-secondary">Business Intelligence</p>
+    <>
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:static inset-y-0 left-0 z-50 lg:z-auto
+        w-64 bg-card shadow-lg flex flex-col
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Mobile Close Button */}
+        <div className="lg:hidden flex justify-end p-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="text-text-secondary hover:text-text-primary"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Logo Header */}
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-superset-blue rounded-lg flex items-center justify-center">
+              <BarChart3 className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-text-primary">Superset BI</h1>
+              <p className="text-sm text-text-secondary">Business Intelligence</p>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Navigation Menu */}
       <nav className="flex-1 p-4 space-y-2">
@@ -61,6 +103,7 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={handleLinkClick}
                 className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                   isActive(item.href)
                     ? "bg-superset-blue text-white"
@@ -91,6 +134,7 @@ export default function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={handleLinkClick}
                   className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                     isActive(item.href)
                       ? "bg-superset-blue text-white"
@@ -116,6 +160,7 @@ export default function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={handleLinkClick}
                   className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                     isActive(item.href)
                       ? "bg-superset-blue text-white"
@@ -146,6 +191,7 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

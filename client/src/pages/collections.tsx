@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import Sidebar from "@/components/layout/sidebar";
 import TopBar from "@/components/layout/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +9,22 @@ import { DollarSign, Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Collections() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  
   const { data: collections, isLoading, refetch } = useQuery({
     queryKey: ['/api/collections'],
   });
 
   const handleRefresh = () => {
     refetch();
+  };
+
+  const handleMenuClick = () => {
+    setSidebarOpen(true);
+  };
+
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
   };
 
   const getStatusBadge = (status: string) => {
@@ -104,17 +115,21 @@ export default function Collections() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="hidden lg:block">
+        <Sidebar />
+      </div>
+      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         <TopBar 
           title="Gestión de Cobranza" 
           subtitle="Control de pagos y cuentas por cobrar"
           onRefresh={handleRefresh}
+          onMenuClick={handleMenuClick}
         />
         
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">

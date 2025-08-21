@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import Sidebar from "@/components/layout/sidebar";
 import TopBar from "@/components/layout/topbar";
 import KPICard from "@/components/dashboard/kpi-card";
@@ -14,6 +15,8 @@ import { mockActivities } from "@/lib/mock-data";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  
   const { data: analytics, isLoading, refetch } = useQuery({
     queryKey: ['/api/dashboard/analytics'],
   });
@@ -31,23 +34,35 @@ export default function Dashboard() {
     refetch();
   };
 
+  const handleMenuClick = () => {
+    setSidebarOpen(true);
+  };
+
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen overflow-hidden">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="hidden lg:block">
+          <Sidebar />
+        </div>
+        <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
+        <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
           <TopBar 
             title="Dashboard Ejecutivo" 
             subtitle="Resumen integral de tu negocio"
             onRefresh={handleRefresh}
+            onMenuClick={handleMenuClick}
           />
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
               {Array(4).fill(0).map((_, i) => (
                 <Skeleton key={i} className="h-32" />
               ))}
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
               <Skeleton className="h-96" />
               <Skeleton className="h-96" />
             </div>
@@ -60,14 +75,18 @@ export default function Dashboard() {
   if (!analytics) {
     return (
       <div className="flex h-screen overflow-hidden">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="hidden lg:block">
+          <Sidebar />
+        </div>
+        <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
+        <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
           <TopBar 
             title="Dashboard Ejecutivo" 
             subtitle="Resumen integral de tu negocio"
             onRefresh={handleRefresh}
+            onMenuClick={handleMenuClick}
           />
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
             <div className="text-center py-12">
               <p className="text-text-secondary">Error al cargar los datos del dashboard</p>
             </div>
@@ -79,17 +98,21 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="hidden lg:block">
+        <Sidebar />
+      </div>
+      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         <TopBar 
           title="Dashboard Ejecutivo" 
           subtitle="Resumen integral de tu negocio"
           onRefresh={handleRefresh}
+          onMenuClick={handleMenuClick}
         />
         
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {/* KPI Cards Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
             <KPICard
               title="Ingresos Totales"
               value={formatCurrency(analytics.kpis.totalRevenue)}
@@ -121,20 +144,20 @@ export default function Dashboard() {
           </div>
 
           {/* Charts and Analytics Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
             <SalesChart data={analytics.salesTrend} />
             <InventoryChart data={analytics.inventoryDistribution} />
           </div>
 
           {/* Detailed Analytics and Tables Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-6 lg:mb-8">
             <TopProducts products={analytics.topProducts} />
             <CollectionStatus status={analytics.collectionStatus} />
             <AIInsights />
           </div>
 
           {/* Recent Activities and Alerts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             <RecentActivities activities={mockActivities} />
             <QuickActions />
           </div>
