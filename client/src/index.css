@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(210, 25%, 7.8%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(210, 25%, 7.8%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(210, 25%, 7.8%);
+  --primary: hsl(203.9, 88.3%, 53.1%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(210, 40%, 96%);
+  --secondary-foreground: hsl(210, 25%, 7.8%);
+  --muted: hsl(210, 40%, 96%);
+  --muted-foreground: hsl(215.4, 16.3%, 46.9%);
+  --accent: hsl(210, 40%, 96%);
+  --accent-foreground: hsl(210, 25%, 7.8%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(214.3, 31.8%, 91.4%);
+  --input: hsl(214.3, 31.8%, 91.4%);
+  --ring: hsl(203.9, 88.3%, 53.1%);
+  --radius: 0.5rem;
+  
+  /* Superset BI Custom Colors */
+  --superset-blue: hsl(210, 100%, 56%);
+  --superset-teal: hsl(174, 72%, 56%);
+  --superset-orange: hsl(16, 100%, 66%);
+  --dashboard-bg: hsl(210, 20%, 98%);
+  --text-primary: hsl(0, 0%, 15%);
+  --text-secondary: hsl(0, 0%, 55%);
+  --success: hsl(120, 60%, 50%);
+  --warning: hsl(45, 93%, 47%);
+  --danger: hsl(0, 65%, 60%);
+}
+
+.dark {
+  --background: hsl(222.2, 84%, 4.9%);
+  --foreground: hsl(210, 40%, 98%);
+  --card: hsl(222.2, 84%, 4.9%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(222.2, 84%, 4.9%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --primary: hsl(203.9, 88.3%, 53.1%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(217.2, 32.6%, 17.5%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --muted: hsl(217.2, 32.6%, 17.5%);
+  --muted-foreground: hsl(215, 20.2%, 65.1%);
+  --accent: hsl(217.2, 32.6%, 17.5%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(217.2, 32.6%, 17.5%);
+  --input: hsl(217.2, 32.6%, 17.5%);
+  --ring: hsl(203.9, 88.3%, 53.1%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-dashboard-bg text-text-primary font-inter;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .bg-dashboard-bg {
+    background-color: hsl(var(--dashboard-bg));
+  }
+  
+  .bg-superset-blue {
+    background-color: hsl(var(--superset-blue));
+  }
+  
+  .bg-superset-teal {
+    background-color: hsl(var(--superset-teal));
+  }
+  
+  .bg-superset-orange {
+    background-color: hsl(var(--superset-orange));
+  }
+  
+  .text-superset-blue {
+    color: hsl(var(--superset-blue));
+  }
+  
+  .text-superset-teal {
+    color: hsl(var(--superset-teal));
+  }
+  
+  .text-superset-orange {
+    color: hsl(var(--superset-orange));
+  }
+  
+  .text-text-primary {
+    color: hsl(var(--text-primary));
+  }
+  
+  .text-text-secondary {
+    color: hsl(var(--text-secondary));
+  }
+  
+  .text-success {
+    color: hsl(var(--success));
+  }
+  
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  
+  .text-danger {
+    color: hsl(var(--danger));
+  }
+  
+  .bg-success {
+    background-color: hsl(var(--success));
+  }
+  
+  .bg-warning {
+    background-color: hsl(var(--warning));
+  }
+  
+  .bg-danger {
+    background-color: hsl(var(--danger));
+  }
+  
+  .hover\\:bg-superset-blue:hover {
+    background-color: hsl(var(--superset-blue));
+  }
+  
+  .hover\\:bg-superset-teal:hover {
+    background-color: hsl(var(--superset-teal));
+  }
+  
+  .hover\\:bg-superset-orange:hover {
+    background-color: hsl(var(--superset-orange));
+  }
+}
