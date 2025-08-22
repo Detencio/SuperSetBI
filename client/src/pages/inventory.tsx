@@ -19,6 +19,8 @@ import ExportButton from "@/components/ExportButton";
 import CurrencySelector from "@/components/CurrencySelector";
 import { getInventoryExportConfig } from "@/lib/export-utils";
 import { useCurrency } from "@/lib/currency-utils";
+import AdvancedFilters from "@/components/AdvancedFilters";
+import { generateDynamicFilterConfigs, INVENTORY_FILTER_CONFIGS } from "@/components/FilterConfigurations";
 
 export default function Inventory() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -26,6 +28,7 @@ export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
+  const [advancedFilteredProducts, setAdvancedFilteredProducts] = useState<any[]>([]);
   
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['/api/products'],
@@ -58,8 +61,8 @@ export default function Inventory() {
 
 
 
-  // Filter products
-  const filteredProducts = Array.isArray(products) ? products.filter((product: any) => {
+  // Legacy filters (mantener compatibilidad con la tabla existente)
+  const legacyFilteredProducts = Array.isArray(products) ? products.filter((product: any) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
@@ -75,6 +78,12 @@ export default function Inventory() {
     
     return matchesSearch && matchesCategory && matchesStock;
   }) : [];
+
+  // Usar productos filtrados avanzados si están disponibles, sino usar filtros legacy
+  const finalFilteredProducts = advancedFilteredProducts.length > 0 ? advancedFilteredProducts : legacyFilteredProducts;
+  
+  // Generar configuraciones de filtro dinámicamente
+  const filterConfigs = generateDynamicFilterConfigs(products || [], INVENTORY_FILTER_CONFIGS);
 
   // Get unique categories
   const categories = Array.from(new Set(Array.isArray(products) ? products.map((p: any) => p.category) : []));
@@ -145,7 +154,7 @@ export default function Inventory() {
                 size="sm"
               />
               <Badge variant="outline" className="font-normal">
-                {filteredProducts?.length || 0} productos
+                {finalFilteredProducts?.length || 0} productos
               </Badge>
               {searchTerm && (
                 <Badge variant="secondary" className="font-normal">
@@ -154,8 +163,8 @@ export default function Inventory() {
               )}
             </div>
             <ExportButton
-              data={filteredProducts || []}
-              config={getInventoryExportConfig(filteredProducts || [])}
+              data={finalFilteredProducts || []}
+              config={getInventoryExportConfig(finalFilteredProducts || [])}
               title="Exportar Inventario"
               variant="outline"
               showAdvancedOptions={true}
@@ -168,6 +177,18 @@ export default function Inventory() {
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {/* Advanced KPIs Dashboard */}
           <InventoryKPIs kpis={inventoryKPIs || null} isLoading={kpisLoading} />
+          
+          {/* Advanced Filters */}
+          <div className="mt-6">
+            <AdvancedFilters
+              data={products || []}
+              onFilteredDataChange={setAdvancedFilteredProducts}
+              filterConfigs={filterConfigs}
+              module="inventory"
+              variant="compact"
+              showSegments={true}
+            />
+          </div>
           
           {/* Main Content Tabs */}
           <div className="mt-8">
@@ -194,7 +215,7 @@ export default function Inventory() {
               {/* Products Tab */}
               <TabsContent value="products" className="space-y-6">
                 <EnhancedProductTable 
-                  products={filteredProducts || []}
+                  products={finalFilteredProducts || []}
                   searchTerm={searchTerm}
                   onSearchChange={setSearchTerm}
                   categoryFilter={categoryFilter}
@@ -215,7 +236,7 @@ export default function Inventory() {
               {/* Analytics Tab */}
               <TabsContent value="analytics" className="space-y-6">
                 <InventoryCharts 
-                  products={filteredProducts || []}
+                  products={finalFilteredProducts || []}
                   isLoading={isLoading}
                 />
               </TabsContent>
@@ -223,7 +244,7 @@ export default function Inventory() {
               {/* Recommendations Tab */}
               <TabsContent value="recommendations" className="space-y-6">
                 <InventoryRecommendations 
-                  products={filteredProducts || []}
+                  products={finalFilteredProducts || []}
                   analytics={inventoryKPIs || null}
                   isLoading={isLoading}
                 />
