@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/layout/sidebar";
 import TopBar from "@/components/layout/topbar";
 import { Badge } from "@/components/ui/badge";
@@ -17,11 +17,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ExportButton from "@/components/ExportButton";
 import CurrencySelector from "@/components/CurrencySelector";
 import { getInventoryExportConfig, getSalesExportConfig, getCollectionsExportConfig } from "@/lib/export-utils";
-import { formatCLP, formatCurrencyWithConversion } from "@/lib/currency-utils";
+import { useCurrency, convertCurrency, formatCurrency } from "@/lib/currency-utils";
 
 export default function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currency, setCurrency] = useState<'CLP' | 'USD'>('CLP');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { currentCurrency } = useCurrency();
   
   const { data: analytics, isLoading, refetch } = useQuery({
     queryKey: ['/api/dashboard/analytics'],
@@ -40,11 +40,21 @@ export default function Dashboard() {
     queryKey: ['/api/collections'],
   });
 
-  const formatCurrency = (value: number) => {
-    if (currency === 'USD') {
-      return formatCurrencyWithConversion(value, currency).converted || formatCLP(value);
+  // Función para formatear monedas con conversión automática
+  const formatDisplayCurrency = (value: number) => {
+    if (currentCurrency.code === 'USD') {
+      const convertedValue = convertCurrency(value, 'CLP', 'USD');
+      return formatCurrency(convertedValue, 'USD', { 
+        showSymbol: true, 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2 
+      });
     }
-    return formatCLP(value);
+    return formatCurrency(value, 'CLP', { 
+      showSymbol: true, 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0 
+    });
   };
 
   const handleRefresh = () => {
@@ -123,14 +133,14 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <CurrencySelector 
-                currency={currency} 
-                onCurrencyChange={setCurrency}
+                variant="dropdown"
+                size="sm"
               />
               <Badge variant="outline" className="font-normal">
                 Dashboard Ejecutivo
               </Badge>
               <Badge variant="secondary" className="font-normal">
-                {formatCurrency(analytics.kpis.totalRevenue)} ingresos
+                {formatDisplayCurrency(analytics?.kpis?.totalRevenue || 0)} ingresos
               </Badge>
             </div>
             <ExportButton
@@ -176,28 +186,28 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
             <KPICard
               title="Ingresos Totales"
-              value={formatCurrency(analytics.kpis.totalRevenue)}
+              value={formatDisplayCurrency(analytics?.kpis?.totalRevenue || 0)}
               change={12.5}
               icon={<DollarSign className="h-6 w-6 text-superset-blue" />}
               iconBgColor="bg-superset-blue"
             />
             <KPICard
               title="Valor de Inventario"
-              value={formatCurrency(analytics.kpis.inventoryValue)}
+              value={formatDisplayCurrency(analytics?.kpis?.inventoryValue || 0)}
               change={-3.2}
               icon={<Package className="h-6 w-6 text-superset-teal" />}
               iconBgColor="bg-superset-teal"
             />
             <KPICard
               title="Cobranza Pendiente"
-              value={formatCurrency(analytics.kpis.pendingCollections)}
+              value={formatDisplayCurrency(analytics?.kpis?.pendingCollections || 0)}
               change={8.1}
               icon={<CreditCard className="h-6 w-6 text-superset-orange" />}
               iconBgColor="bg-superset-orange"
             />
             <KPICard
               title="Ventas del Mes"
-              value={analytics.kpis.monthlySales.toString()}
+              value={(analytics?.kpis?.monthlySales || 0).toString()}
               change={15.3}
               icon={<TrendingUp className="h-6 w-6 text-success" />}
               iconBgColor="bg-success"
@@ -206,14 +216,14 @@ export default function Dashboard() {
 
           {/* Charts and Analytics Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
-            <SalesChart data={analytics.salesTrend} />
-            <InventoryChart data={analytics.inventoryDistribution} />
+            <SalesChart data={analytics?.salesTrend || []} />
+            <InventoryChart data={analytics?.inventoryDistribution || []} />
           </div>
 
           {/* Detailed Analytics and Tables Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-6 lg:mb-8">
-            <TopProducts products={analytics.topProducts} />
-            <CollectionStatus status={analytics.collectionStatus} />
+            <TopProducts products={analytics?.topProducts || []} />
+            <CollectionStatus status={analytics?.collectionStatus || {}} />
             <AIInsights />
           </div>
 

@@ -1,14 +1,11 @@
-import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, TrendingUp } from "lucide-react";
 import { 
-  getCurrentCurrency, 
-  setCurrentCurrency, 
+  useCurrency,
   CURRENCIES, 
-  EXCHANGE_RATES,
-  type CurrencyConfig 
+  EXCHANGE_RATES
 } from "@/lib/currency-utils";
 
 interface CurrencySelectorProps {
@@ -24,23 +21,7 @@ export default function CurrencySelector({
   showExchangeRate = true,
   className = ""
 }: CurrencySelectorProps) {
-  const [currentCurrency, setCurrentCurrencyState] = useState<CurrencyConfig>(getCurrentCurrency());
-
-  useEffect(() => {
-    const handleCurrencyChange = (event: CustomEvent) => {
-      setCurrentCurrencyState(event.detail.currency);
-    };
-
-    window.addEventListener('currencyChanged', handleCurrencyChange as EventListener);
-    return () => {
-      window.removeEventListener('currencyChanged', handleCurrencyChange as EventListener);
-    };
-  }, []);
-
-  const handleCurrencyChange = (currencyCode: string) => {
-    setCurrentCurrency(currencyCode);
-    setCurrentCurrencyState(CURRENCIES[currencyCode]);
-  };
+  const { currentCurrency, setCurrency } = useCurrency();
 
   const getExchangeRateText = () => {
     if (currentCurrency.code === 'CLP') {
@@ -56,7 +37,7 @@ export default function CurrencySelector({
       <div className={`flex flex-col gap-1 ${className}`}>
         <Select 
           value={currentCurrency.code} 
-          onValueChange={handleCurrencyChange}
+          onValueChange={setCurrency}
         >
           <SelectTrigger 
             className={`w-full ${
@@ -109,7 +90,7 @@ export default function CurrencySelector({
               key={currency.code}
               variant={currentCurrency.code === currency.code ? "default" : "ghost"}
               size={size === "sm" ? "sm" : "default"}
-              onClick={() => handleCurrencyChange(currency.code)}
+              onClick={() => setCurrency(currency.code)}
               className={`flex-1 ${
                 size === "sm" ? "h-7 text-xs px-2" : "h-9 text-sm px-3"
               }`}

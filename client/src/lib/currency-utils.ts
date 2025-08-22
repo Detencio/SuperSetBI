@@ -1,4 +1,6 @@
 // Utilidades para manejo de monedas y conversión
+import { useState, useEffect } from 'react';
+
 export interface CurrencyConfig {
   code: string;
   symbol: string;
@@ -96,8 +98,11 @@ export const formatCurrency = (
   let formattedNumber: string;
   
   if (currency.code === 'CLP') {
-    // Formato chileno: 15.289,08
-    formattedNumber = numericAmount.toLocaleString('es-CL', formatOptions);
+    // Formato chileno: 15.289,08 (forzar separadores específicos)
+    const parts = numericAmount.toFixed(formatOptions.maximumFractionDigits || 0).split('.');
+    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decimalPart = parts[1];
+    formattedNumber = decimalPart ? `${integerPart},${decimalPart}` : integerPart;
   } else if (currency.code === 'USD') {
     // Formato estadounidense: 15,289.08
     formattedNumber = numericAmount.toLocaleString('en-US', formatOptions);
@@ -182,12 +187,30 @@ export const parseCurrencyString = (currencyString: string): number => {
 };
 
 // Hook personalizado para manejo de monedas (para usar en React)
+
 export const useCurrency = () => {
-  const getCurrentCurrencyState = () => getCurrentCurrency();
+  const [currentCurrency, setCurrentCurrencyState] = useState<CurrencyConfig>(() => getCurrentCurrency());
+  
+  useEffect(() => {
+    const handleCurrencyChange = (event: CustomEvent) => {
+      setCurrentCurrencyState(event.detail.currency);
+    };
+    
+    window.addEventListener('currencyChanged', handleCurrencyChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('currencyChanged', handleCurrencyChange as EventListener);
+    };
+  }, []);
+  
+  const setCurrency = (currencyCode: string) => {
+    setCurrentCurrency(currencyCode);
+    setCurrentCurrencyState(CURRENCIES[currencyCode] || CURRENCIES.CLP);
+  };
   
   return {
-    currentCurrency: getCurrentCurrencyState(),
-    setCurrency: setCurrentCurrency,
+    currentCurrency,
+    setCurrency,
     formatCurrency,
     formatCLP,
     formatUSD,
