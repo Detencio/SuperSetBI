@@ -17,7 +17,7 @@ interface TopBarProps {
 
 export default function TopBar({ title, subtitle, onRefresh, onMenuClick }: TopBarProps) {
   return (
-    <header className="bg-card shadow-sm border-b border-gray-200 p-4 lg:p-6">
+    <header className="bg-white/95 backdrop-blur-xl border-b border-gray-200/60 p-4 lg:p-6 shadow-sm">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
           {/* Mobile Menu Button */}
@@ -25,14 +25,14 @@ export default function TopBar({ title, subtitle, onRefresh, onMenuClick }: TopB
             variant="ghost"
             size="sm"
             onClick={onMenuClick}
-            className="lg:hidden text-text-secondary hover:text-text-primary"
+            className="lg:hidden text-text-secondary hover:text-text-primary rounded-xl transition-colors"
           >
             <Menu className="h-5 w-5" />
           </Button>
           
           <div>
-            <h1 className="text-xl lg:text-2xl font-bold text-text-primary">{title}</h1>
-            <p className="text-text-secondary mt-1 text-sm lg:text-base hidden sm:block">{subtitle}</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-text-primary tracking-tight">{title}</h1>
+            <p className="text-text-secondary mt-2 text-sm lg:text-base font-medium hidden sm:block">{subtitle}</p>
           </div>
         </div>
         
@@ -56,7 +56,7 @@ export default function TopBar({ title, subtitle, onRefresh, onMenuClick }: TopB
           {/* Refresh Button */}
           <Button 
             onClick={onRefresh}
-            className="bg-superset-blue hover:bg-blue-600 text-white"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl font-medium"
             size="sm"
           >
             <RefreshCw className="h-4 w-4 lg:mr-2" />

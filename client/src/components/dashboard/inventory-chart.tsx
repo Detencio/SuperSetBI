@@ -20,22 +20,22 @@ const COLORS = [
 
 export default function InventoryChart({ data }: InventoryChartProps) {
   return (
-    <Card>
-      <CardHeader>
+    <Card className="card-hover shadow-md border-0">
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-semibold text-text-primary">
+            <CardTitle className="text-xl font-bold text-text-primary tracking-tight">
               Distribución de Inventario
             </CardTitle>
-            <p className="text-text-secondary text-sm">
+            <p className="text-text-secondary text-sm font-medium mt-1">
               Por categoría de producto
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-text-secondary hover:text-blue-600 rounded-xl">
               <Download className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-text-secondary hover:text-blue-600 rounded-xl">
               <Expand className="h-4 w-4" />
             </Button>
           </div>

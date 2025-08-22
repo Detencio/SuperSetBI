@@ -81,12 +81,12 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         {/* Logo Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-superset-blue rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
               <BarChart3 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-text-primary">Superset BI</h1>
-              <p className="text-sm text-text-secondary">Business Intelligence</p>
+              <h1 className="text-2xl font-bold text-text-primary tracking-tight">Superset</h1>
+              <p className="text-sm text-text-secondary font-medium">Business Intelligence</p>
             </div>
           </div>
         </div>
@@ -104,10 +104,10 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                 key={item.name}
                 href={item.href}
                 onClick={handleLinkClick}
-                className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-200 font-medium ${
                   isActive(item.href)
-                    ? "bg-superset-blue text-white"
-                    : "text-text-primary hover:bg-gray-100"
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+                    : "text-text-primary hover:bg-blue-50 hover:text-blue-600"
                 }`}
               >
                 <Icon className="h-5 w-5" />
@@ -135,10 +135,10 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   key={item.name}
                   href={item.href}
                   onClick={handleLinkClick}
-                  className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-200 font-medium ${
                     isActive(item.href)
-                      ? "bg-superset-blue text-white"
-                      : "text-text-primary hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+                      : "text-text-primary hover:bg-blue-50 hover:text-blue-600"
                   }`}
                 >
                   <Icon className={`h-5 w-5 ${isActive(item.href) ? "text-white" : iconColor}`} />
@@ -161,13 +161,13 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   key={item.name}
                   href={item.href}
                   onClick={handleLinkClick}
-                  className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-200 font-medium ${
                     isActive(item.href)
-                      ? "bg-superset-blue text-white"
-                      : "text-text-primary hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+                      : "text-text-primary hover:bg-blue-50 hover:text-blue-600"
                   }`}
                 >
-                  <Icon className="h-5 w-5 text-text-secondary" />
+                  <Icon className={`h-5 w-5 ${isActive(item.href) ? "text-white" : "text-text-secondary"}`} />
                   <span className="font-medium">{item.name}</span>
                 </Link>
               );
