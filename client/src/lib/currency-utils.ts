@@ -218,14 +218,18 @@ export const useCurrency = () => {
       return `${currentCurrency.symbol} 0`;
     }
 
+    // Convertir de CLP base a la moneda actual
     let convertedAmount = numericAmount;
-    
-    // Si el monto está en CLP y queremos USD, convertir
     if (currentCurrency.code === 'USD') {
       convertedAmount = convertCurrency(numericAmount, 'CLP', 'USD');
     }
-    
-    return formatCurrency(convertedAmount, currentCurrency.code, options);
+
+    // Formatear con el estilo correcto
+    return formatCurrency(convertedAmount, currentCurrency.code, {
+      showSymbol: true,
+      minimumFractionDigits: options?.minimumFractionDigits ?? 0,
+      maximumFractionDigits: options?.maximumFractionDigits ?? 0
+    });
   };
   
   return {

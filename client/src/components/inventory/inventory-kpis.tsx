@@ -35,13 +35,10 @@ interface InventoryKPIsProps {
   isLoading: boolean;
 }
 
+import { useCurrency } from "@/lib/currency-utils";
+
 export default function InventoryKPIs({ kpis, isLoading }: InventoryKPIsProps) {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(value);
-  };
+  const { formatDisplayCurrency } = useCurrency();
 
   const getServiceLevelColor = (level: number) => {
     if (level >= 98) return "text-success";
@@ -88,7 +85,7 @@ export default function InventoryKPIs({ kpis, isLoading }: InventoryKPIsProps) {
               <div>
                 <p className="text-text-secondary text-sm font-medium">Valor Total Stock</p>
                 <p className="text-2xl lg:text-3xl font-bold text-text-primary mt-2">
-                  {formatCurrency(kpis.totalStockValue)}
+                  {formatDisplayCurrency(kpis.totalStockValue)}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-500 bg-opacity-10 rounded-lg flex items-center justify-center">

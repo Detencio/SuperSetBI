@@ -16,7 +16,7 @@ import {
   Edit,
   MoreHorizontal
 } from "lucide-react";
-import { useCurrency, formatCurrency } from "@/lib/currency-utils";
+import { useCurrency } from "@/lib/currency-utils";
 
 interface EnhancedProductTableProps {
   products?: any[];
@@ -39,15 +39,7 @@ export default function EnhancedProductTable({
   onStockChange,
   isLoading
 }: EnhancedProductTableProps) {
-  const { currentCurrency } = useCurrency();
-
-  const formatDisplayCurrency = (value: number) => {
-    return formatCurrency(value, currentCurrency.code, { 
-      showSymbol: true, 
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0 
-    });
-  };
+  const { currentCurrency, formatDisplayCurrency } = useCurrency();
 
   // Funciones para análisis de stock
   const getStockStatus = (stock: number, minStock: number = 10, maxStock: number = 30) => {
