@@ -134,10 +134,7 @@ export default function CompanyManagement() {
 
   // Create company mutation
   const createCompanyMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/companies", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: any) => apiRequest("POST", "/api/companies", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
       setShowCreateDialog(false);
@@ -166,10 +163,7 @@ export default function CompanyManagement() {
 
   // Create invitation mutation
   const createInvitationMutation = useMutation({
-    mutationFn: (data: any) => apiRequest(`/api/companies/${selectedCompany?.id}/invitations`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: any) => apiRequest("POST", `/api/companies/${selectedCompany?.id}/invitations`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/companies", selectedCompany?.id, "invitations"] });
       setShowInviteDialog(false);
@@ -193,7 +187,7 @@ export default function CompanyManagement() {
 
   // Create demo company mutation
   const createDemoMutation = useMutation({
-    mutationFn: () => apiRequest("/api/companies/demo", "POST"),
+    mutationFn: () => apiRequest("POST", "/api/companies/demo"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
       toast({

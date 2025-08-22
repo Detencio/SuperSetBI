@@ -11,10 +11,13 @@ import ExportButton from "@/components/ExportButton";
 import CurrencySelector from "@/components/CurrencySelector";
 import { getSalesExportConfig } from "@/lib/export-utils";
 import { useCurrency, formatCurrency } from "@/lib/currency-utils";
+import AdvancedFilters from "@/components/AdvancedFilters";
+import { generateDynamicFilterConfigs, SALES_FILTER_CONFIGS } from "@/components/FilterConfigurations";
 
 export default function Sales() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentCurrency, formatDisplayCurrency } = useCurrency();
+  const [filteredSales, setFilteredSales] = useState<any[]>([]);
   
   const { data: sales, isLoading, refetch } = useQuery({
     queryKey: ['/api/sales'],
@@ -66,6 +69,12 @@ export default function Sales() {
         return { label: 'Desconocido', color: 'bg-gray-500 text-white' };
     }
   };
+
+  // Usar datos filtrados si están disponibles, sino usar datos originales
+  const finalSales = filteredSales.length > 0 ? filteredSales : (sales || []);
+  
+  // Generar configuraciones de filtro dinámicamente
+  const filterConfigs = generateDynamicFilterConfigs(sales || [], SALES_FILTER_CONFIGS);
 
   if (isLoading) {
     return (
@@ -145,14 +154,14 @@ export default function Sales() {
                 size="sm"
               />
               <Badge variant="outline" className="font-normal">
-                {totalSales} ventas
+                {finalSales.length} ventas
               </Badge>
               <Badge variant="secondary" className="font-normal">
-                {formatDisplayCurrency(totalRevenue)} facturado
+                {formatDisplayCurrency(finalSales.reduce((sum: number, s: any) => sum + parseFloat(s.totalAmount || 0), 0))} facturado
               </Badge>
             </div>
             <ExportButton
-              data={Array.isArray(sales) ? sales.map((sale: any) => ({
+              data={Array.isArray(finalSales) ? finalSales.map((sale: any) => ({
                 ...sale,
                 productName: getProductName(sale.productId),
                 date: sale.saleDate,
@@ -161,7 +170,7 @@ export default function Sales() {
                 customer: sale.customerEmail,
                 salesperson: sale.salesperson || 'N/A',
               })) : []}
-              config={getSalesExportConfig(Array.isArray(sales) ? sales.map((sale: any) => ({
+              config={getSalesExportConfig(Array.isArray(finalSales) ? finalSales.map((sale: any) => ({
                 ...sale,
                 productName: getProductName(sale.productId),
                 date: sale.saleDate,
@@ -180,6 +189,18 @@ export default function Sales() {
         </div>
         
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          {/* Advanced Filters */}
+          <div className="mb-6">
+            <AdvancedFilters
+              data={sales || []}
+              onFilteredDataChange={setFilteredSales}
+              filterConfigs={filterConfigs}
+              module="sales"
+              variant="compact"
+              showSegments={true}
+            />
+          </div>
+
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
             <Card>
@@ -272,7 +293,7 @@ export default function Sales() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.isArray(sales) && sales.map((sale: any) => {
+                    {Array.isArray(finalSales) && finalSales.map((sale: any) => {
                       const status = getStatusBadge(sale.status);
                       
                       return (
