@@ -1,12 +1,18 @@
 # Overview
 
-This is a Business Intelligence (BI) dashboard application built with a full-stack architecture. The system provides comprehensive business analytics including inventory management, sales tracking, and collection management. It features a modern React frontend with shadcn/ui components and an Express.js backend with in-memory storage that's designed to be easily migrated to PostgreSQL using Drizzle ORM.
+**supersetBI** is a comprehensive Business Intelligence (BI) dashboard application built with a full-stack architecture. The system provides comprehensive business analytics including inventory management, sales tracking, and collection management. It features a modern React frontend with shadcn/ui components and an Express.js backend with in-memory storage that's designed to be easily migrated to PostgreSQL using Drizzle ORM.
 
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
 
 # Recent Changes
+
+## Project Name Update (August 22, 2025)
+- Updated project name from DataVista to supersetBI
+- Updated HTML title and meta description to reflect new branding
+- Maintained consistent "Superset" branding throughout the application
+- Fixed sidebar duplication issue ensuring only one menu appears
 
 ## Mobile Responsive Design Implementation (August 21, 2025)
 - Updated all pages (Dashboard, Inventory, Collections, Sales) to be fully responsive
