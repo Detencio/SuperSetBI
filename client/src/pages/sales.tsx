@@ -9,7 +9,7 @@ import { Plus, TrendingUp, ShoppingCart, DollarSign, Users } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Sales() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   const { data: sales, isLoading, refetch } = useQuery({
     queryKey: ['/api/sales'],
@@ -70,11 +70,8 @@ export default function Sales() {
   if (isLoading) {
     return (
       <div className="flex h-screen overflow-hidden">
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
         <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-        <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <TopBar 
             title="Seguimiento de Ventas" 
             subtitle="Análisis completo de ventas y rendimiento"
@@ -97,11 +94,8 @@ export default function Sales() {
   if (!sales) {
     return (
       <div className="flex h-screen overflow-hidden">
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
         <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-        <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <TopBar 
             title="Seguimiento de Ventas" 
             subtitle="Análisis completo de ventas y rendimiento"
@@ -133,11 +127,8 @@ export default function Sales() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <div className="hidden lg:block">
-        <Sidebar />
-      </div>
       <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar 
           title="Seguimiento de Ventas" 
           subtitle="Análisis completo de ventas y rendimiento"

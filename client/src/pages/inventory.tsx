@@ -9,7 +9,7 @@ import { Plus, AlertTriangle, Package } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Inventory() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   const { data: products, isLoading, refetch } = useQuery({
     queryKey: ['/api/products'],
@@ -43,11 +43,8 @@ export default function Inventory() {
   if (isLoading) {
     return (
       <div className="flex h-screen overflow-hidden">
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
         <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-        <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <TopBar 
             title="Control de Inventario" 
             subtitle="Gestión completa de productos y stock"
@@ -70,11 +67,8 @@ export default function Inventory() {
   if (!products) {
     return (
       <div className="flex h-screen overflow-hidden">
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
         <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-        <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <TopBar 
             title="Control de Inventario" 
             subtitle="Gestión completa de productos y stock"
@@ -98,11 +92,8 @@ export default function Inventory() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <div className="hidden lg:block">
-        <Sidebar />
-      </div>
       <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar 
           title="Control de Inventario" 
           subtitle="Gestión completa de productos y stock"

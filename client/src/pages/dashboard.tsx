@@ -15,7 +15,7 @@ import { mockActivities } from "@/lib/mock-data";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   const { data: analytics, isLoading, refetch } = useQuery({
     queryKey: ['/api/dashboard/analytics'],
@@ -45,11 +45,8 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="flex h-screen overflow-hidden">
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
         <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-        <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <TopBar 
             title="Dashboard Ejecutivo" 
             subtitle="Resumen integral de tu negocio"
@@ -75,11 +72,8 @@ export default function Dashboard() {
   if (!analytics) {
     return (
       <div className="flex h-screen overflow-hidden">
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
         <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-        <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <TopBar 
             title="Dashboard Ejecutivo" 
             subtitle="Resumen integral de tu negocio"
@@ -98,11 +92,8 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <div className="hidden lg:block">
-        <Sidebar />
-      </div>
       <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar 
           title="Dashboard Ejecutivo" 
           subtitle="Resumen integral de tu negocio"

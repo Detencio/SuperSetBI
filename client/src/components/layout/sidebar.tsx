@@ -64,7 +64,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         fixed lg:static inset-y-0 left-0 z-50 lg:z-auto
         w-64 bg-card shadow-lg flex flex-col
         transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
       `}>
         {/* Mobile Close Button */}
         <div className="lg:hidden flex justify-end p-4">
