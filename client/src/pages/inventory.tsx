@@ -18,11 +18,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ExportButton from "@/components/ExportButton";
 import CurrencySelector from "@/components/CurrencySelector";
 import { getInventoryExportConfig } from "@/lib/export-utils";
-import { useCurrency, convertCurrency, formatCurrency } from "@/lib/currency-utils";
+import { useCurrency } from "@/lib/currency-utils";
 
 export default function Inventory() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentCurrency } = useCurrency();
+  const { currentCurrency, formatDisplayCurrency } = useCurrency();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
@@ -59,7 +59,7 @@ export default function Inventory() {
 
 
   // Filter products
-  const filteredProducts = products?.filter((product: any) => {
+  const filteredProducts = Array.isArray(products) ? products.filter((product: any) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
@@ -74,17 +74,12 @@ export default function Inventory() {
     }
     
     return matchesSearch && matchesCategory && matchesStock;
-  }) || [];
+  }) : [];
 
   // Get unique categories
-  const categories = Array.from(new Set(products?.map((p: any) => p.category) || []));
+  const categories = Array.from(new Set(Array.isArray(products) ? products.map((p: any) => p.category) : []));
 
-  const formatCurrency = (value: string) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(parseFloat(value));
-  };
+
 
   if (productsLoading) {
     return (
@@ -172,7 +167,7 @@ export default function Inventory() {
         
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {/* Advanced KPIs Dashboard */}
-          <InventoryKPIs kpis={inventoryKPIs} isLoading={kpisLoading} />
+          <InventoryKPIs kpis={inventoryKPIs || null} isLoading={kpisLoading} />
           
           {/* Main Content Tabs */}
           <div className="mt-8">
@@ -229,7 +224,7 @@ export default function Inventory() {
               <TabsContent value="recommendations" className="space-y-6">
                 <InventoryRecommendations 
                   products={filteredProducts || []}
-                  analytics={inventoryKPIs}
+                  analytics={inventoryKPIs || null}
                   isLoading={isLoading}
                 />
               </TabsContent>

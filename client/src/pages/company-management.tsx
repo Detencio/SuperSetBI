@@ -193,9 +193,7 @@ export default function CompanyManagement() {
 
   // Create demo company mutation
   const createDemoMutation = useMutation({
-    mutationFn: () => apiRequest("/api/companies/demo", {
-      method: "POST",
-    }),
+    mutationFn: () => apiRequest("/api/companies/demo", "POST"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
       toast({

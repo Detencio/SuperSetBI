@@ -10,11 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ExportButton from "@/components/ExportButton";
 import CurrencySelector from "@/components/CurrencySelector";
 import { getSalesExportConfig } from "@/lib/export-utils";
-import { useCurrency, convertCurrency, formatCurrency } from "@/lib/currency-utils";
+import { useCurrency, formatCurrency } from "@/lib/currency-utils";
 
 export default function Sales() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentCurrency } = useCurrency();
+  const { currentCurrency, formatDisplayCurrency } = useCurrency();
   
   const { data: sales, isLoading, refetch } = useQuery({
     queryKey: ['/api/sales'],
@@ -36,23 +36,7 @@ export default function Sales() {
     setSidebarOpen(false);
   };
 
-  // Función para formatear monedas con conversión automática
-  const formatDisplayCurrency = (value: number | string) => {
-    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
-    if (currentCurrency.code === 'USD') {
-      const convertedValue = convertCurrency(numericValue, 'CLP', 'USD');
-      return formatCurrency(convertedValue, 'USD', { 
-        showSymbol: true, 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2 
-      });
-    }
-    return formatCurrency(numericValue, 'CLP', { 
-      showSymbol: true, 
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0 
-    });
-  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
@@ -288,7 +272,7 @@ export default function Sales() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sales.map((sale: any) => {
+                    {Array.isArray(sales) && sales.map((sale: any) => {
                       const status = getStatusBadge(sale.status);
                       
                       return (

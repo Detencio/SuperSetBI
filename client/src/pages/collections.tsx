@@ -10,11 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ExportButton from "@/components/ExportButton";
 import CurrencySelector from "@/components/CurrencySelector";
 import { getCollectionsExportConfig } from "@/lib/export-utils";
-import { useCurrency, convertCurrency, formatCurrency } from "@/lib/currency-utils";
+import { useCurrency, formatCurrency } from "@/lib/currency-utils";
 
 export default function Collections() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentCurrency } = useCurrency();
+  const { currentCurrency, formatDisplayCurrency } = useCurrency();
   
   const { data: collections, isLoading, refetch } = useQuery({
     queryKey: ['/api/collections'],
@@ -45,23 +45,7 @@ export default function Collections() {
     }
   };
 
-  // Función para formatear monedas con conversión automática
-  const formatDisplayCurrency = (value: number | string) => {
-    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
-    if (currentCurrency.code === 'USD') {
-      const convertedValue = convertCurrency(numericValue, 'CLP', 'USD');
-      return formatCurrency(convertedValue, 'USD', { 
-        showSymbol: true, 
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2 
-      });
-    }
-    return formatCurrency(numericValue, 'CLP', { 
-      showSymbol: true, 
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0 
-    });
-  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX');
@@ -278,7 +262,7 @@ export default function Collections() {
                     </tr>
                   </thead>
                   <tbody>
-                    {collections.map((collection: any) => {
+                    {Array.isArray(collections) && collections.map((collection: any) => {
                       const status = getStatusBadge(collection.status);
                       const daysOverdue = getDaysOverdue(collection.dueDate);
                       

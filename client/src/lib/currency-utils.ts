@@ -187,7 +187,6 @@ export const parseCurrencyString = (currencyString: string): number => {
 };
 
 // Hook personalizado para manejo de monedas (para usar en React)
-
 export const useCurrency = () => {
   const [currentCurrency, setCurrentCurrencyState] = useState<CurrencyConfig>(() => getCurrentCurrency());
   
@@ -207,6 +206,27 @@ export const useCurrency = () => {
     setCurrentCurrency(currencyCode);
     setCurrentCurrencyState(CURRENCIES[currencyCode] || CURRENCIES.CLP);
   };
+
+  // Función para formatear dinámicamente según la moneda actual
+  const formatDisplayCurrency = (amount: number | string, options?: {
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+  }): string => {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    
+    if (isNaN(numericAmount) || numericAmount === null || numericAmount === undefined) {
+      return `${currentCurrency.symbol} 0`;
+    }
+
+    let convertedAmount = numericAmount;
+    
+    // Si el monto está en CLP y queremos USD, convertir
+    if (currentCurrency.code === 'USD') {
+      convertedAmount = convertCurrency(numericAmount, 'CLP', 'USD');
+    }
+    
+    return formatCurrency(convertedAmount, currentCurrency.code, options);
+  };
   
   return {
     currentCurrency,
@@ -216,6 +236,7 @@ export const useCurrency = () => {
     formatUSD,
     convertCurrency,
     formatCurrencyWithConversion,
+    formatDisplayCurrency,
     parseCurrencyString,
     availableCurrencies: Object.values(CURRENCIES)
   };
