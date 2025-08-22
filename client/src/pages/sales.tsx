@@ -8,10 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, TrendingUp, ShoppingCart, DollarSign, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExportButton from "@/components/ExportButton";
+import CurrencySelector from "@/components/CurrencySelector";
 import { getSalesExportConfig } from "@/lib/export-utils";
+import { useCurrency, convertCurrency, formatCurrency } from "@/lib/currency-utils";
 
 export default function Sales() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { currentCurrency } = useCurrency();
   
   const { data: sales, isLoading, refetch } = useQuery({
     queryKey: ['/api/sales'],
@@ -33,11 +36,22 @@ export default function Sales() {
     setSidebarOpen(false);
   };
 
-  const formatCurrency = (value: string) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(parseFloat(value));
+  // Función para formatear monedas con conversión automática
+  const formatDisplayCurrency = (value: number | string) => {
+    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (currentCurrency.code === 'USD') {
+      const convertedValue = convertCurrency(numericValue, 'CLP', 'USD');
+      return formatCurrency(convertedValue, 'USD', { 
+        showSymbol: true, 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2 
+      });
+    }
+    return formatCurrency(numericValue, 'CLP', { 
+      showSymbol: true, 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0 
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -142,11 +156,15 @@ export default function Sales() {
         <div className="border-b bg-card px-4 lg:px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <CurrencySelector 
+                variant="dropdown"
+                size="sm"
+              />
               <Badge variant="outline" className="font-normal">
                 {totalSales} ventas
               </Badge>
               <Badge variant="secondary" className="font-normal">
-                {formatCurrency(totalRevenue.toString())} facturado
+                {formatDisplayCurrency(totalRevenue)} facturado
               </Badge>
             </div>
             <ExportButton
@@ -201,7 +219,7 @@ export default function Sales() {
                   <div>
                     <p className="text-text-secondary text-sm font-medium">Ingresos Totales</p>
                     <p className="text-3xl font-bold text-text-primary mt-2">
-                      {formatCurrency(totalRevenue.toString())}
+                      {formatDisplayCurrency(totalRevenue)}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-success bg-opacity-10 rounded-lg flex items-center justify-center">

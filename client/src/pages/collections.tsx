@@ -8,10 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { DollarSign, Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExportButton from "@/components/ExportButton";
+import CurrencySelector from "@/components/CurrencySelector";
 import { getCollectionsExportConfig } from "@/lib/export-utils";
+import { useCurrency, convertCurrency, formatCurrency } from "@/lib/currency-utils";
 
 export default function Collections() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { currentCurrency } = useCurrency();
   
   const { data: collections, isLoading, refetch } = useQuery({
     queryKey: ['/api/collections'],
@@ -42,11 +45,22 @@ export default function Collections() {
     }
   };
 
-  const formatCurrency = (value: string) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(parseFloat(value));
+  // Función para formatear monedas con conversión automática
+  const formatDisplayCurrency = (value: number | string) => {
+    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (currentCurrency.code === 'USD') {
+      const convertedValue = convertCurrency(numericValue, 'CLP', 'USD');
+      return formatCurrency(convertedValue, 'USD', { 
+        showSymbol: true, 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2 
+      });
+    }
+    return formatCurrency(numericValue, 'CLP', { 
+      showSymbol: true, 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0 
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -132,11 +146,15 @@ export default function Collections() {
         <div className="border-b bg-card px-4 lg:px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <CurrencySelector 
+                variant="dropdown"
+                size="sm"
+              />
               <Badge variant="outline" className="font-normal">
                 {Array.isArray(collections) ? collections.length : 0} cuentas
               </Badge>
               <Badge variant="secondary" className="font-normal">
-                {formatCurrency(totalAmount.toString())} por cobrar
+                {formatDisplayCurrency(totalAmount)} por cobrar
               </Badge>
             </div>
             <ExportButton
@@ -180,7 +198,7 @@ export default function Collections() {
                   <div>
                     <p className="text-text-secondary text-sm font-medium">Total por Cobrar</p>
                     <p className="text-3xl font-bold text-text-primary mt-2">
-                      {formatCurrency(totalAmount.toString())}
+                      {formatDisplayCurrency(totalAmount)}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-superset-blue bg-opacity-10 rounded-lg flex items-center justify-center">
@@ -196,7 +214,7 @@ export default function Collections() {
                   <div>
                     <p className="text-text-secondary text-sm font-medium">Cobrado</p>
                     <p className="text-3xl font-bold text-text-primary mt-2">
-                      {formatCurrency(paidAmount.toString())}
+                      {formatDisplayCurrency(paidAmount)}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-success bg-opacity-10 rounded-lg flex items-center justify-center">
