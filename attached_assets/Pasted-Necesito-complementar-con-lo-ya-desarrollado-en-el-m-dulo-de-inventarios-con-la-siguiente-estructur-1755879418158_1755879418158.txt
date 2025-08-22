@@ -1,0 +1,110 @@
+Necesito complementar con lo ya desarrollado en el módulo de inventarios, con la siguiente estructura. 
+La arquitectura del dashboard se organiza en cuatro capas principales que garantizan escalabilidad, rendimiento y usabilidad:
+Capa de Datos: Contiene las tablas maestras y transaccionales que almacenan toda la información del inventario, incluyendo productos, movimientos, proveedores, almacenes y categorías.
+Capa de Procesamiento: Ejecuta los procesos ETL, cálculos de KPIs, generación de alertas automáticas y análisis predictivo.
+Capa de Presentación: Interface web responsive que incluye dashboard principal, gráficos interactivos, tablas dinámicas y paneles de filtros.
+Capa de Usuarios: Diferentes niveles de acceso según roles: gerente de inventario, analista de compras y supervisor de almacén.
+Dashboard Web Interactivo
+El dashboard web debe ser profesional que demuestra las capacidades completas del sistema. La aplicación incluye:
+Panel de KPIs principales con métricas en tiempo real
+Gráficos interactivos para análisis de tendencias y patrones
+Tabla de productos con códigos de color para estados de stock
+Sistema de filtros por categoría, almacén y proveedor
+Panel de recomendaciones automáticas para toma de decisiones
+Funcionalidad de exportación a CSV para análisis adicionales
+Indicadores Clave de Rendimiento (KPIs)
+KPIs Principales
+El dashboard incorpora 10 indicadores clave esenciales para la gestión efectiva del inventario:
+Stock Total: Medición tanto en unidades como en valor monetario del inventario completo, proporcionando visibilidad inmediata del capital invertido en stock.
+Rotación de Inventario: Calculada mediante la fórmula Costo Mercancías Vendidas / Inventario Promedio, indica cuántas veces se renueva el inventario anualmente. Una rotación alta significa eficiencia en la gestión.
+Nivel de Servicio: Porcentaje de demanda satisfecha sin interrupciones, calculado como (Pedidos Satisfechos / Total Pedidos) × 100. Mide la capacidad de cumplir con la demanda del cliente.
+Días de Inventario Disponible: Indica cuántos días puede operar la empresa con el stock actual, calculado como (Inventario Promedio / Costo Mercancías Vendidas) × 365.
+Productos en Stock Crítico: Cantidad de productos que han alcanzado o están por debajo del stock mínimo, requiriendo acción inmediata de reposición.
+KPIs Avanzados para Análisis Específicos
+Clasificación ABC: Análisis que categoriza productos según su valor: A (80% del valor), B (15% del valor), C (5% del valor), permitiendo enfocar recursos en productos de mayor impacto.
+Índice de Liquidez: Proporción entre productos de alta rotación versus productos de baja rotación, útil para identificar oportunidades de mejora en el mix de productos.
+Precisión de Inventario: Mide la exactitud entre stock físico y registros del sistema mediante (Unidades Físicas / Unidades Sistema) × 100, esencial para control operacional.
+Complementar con las variables que existen ya en la propuesta, el objetivo es hacer una estructura de datos potente y acorde a un manejo de inventario profesional.
+Estructura de Base de Datos
+La implementación requiere una base de datos relacional con las siguientes tablas principales:
+Tabla Productos (Tabla Maestra)
+producto_id: Identificador único
+codigo_producto: SKU o referencia
+nombre_producto: Denominación comercial
+categoria_id: Clasificación principal
+stock_actual: Cantidad disponible
+stock_minimo: Nivel de reorden
+stock_maximo: Capacidad máxima
+stock_seguridad: Buffer adicional
+costo_unitario: Precio de adquisición
+precio_venta: Precio comercial
+ubicacion_fisica: Posición en almacén
+Tabla Movimientos (Transaccional)
+movimiento_id: Identificador del movimiento
+producto_id: Producto afectado
+tipo_movimiento: Entrada, salida, transferencia, ajuste
+fecha_movimiento: Timestamp del evento
+cantidad: Unidades involucradas
+valor_total: Importe del movimiento
+numero_documento: Referencia externa
+
+Variables Adicionales para Análisis Avanzado
+El sistema incorpora 18 variables adicionales organizadas en seis categorías para análisis profundo:Análisis ABC y Clasificación:
+Clasificación ABC basada en valor acumulado
+Frecuencia de demanda por producto
+Valor porcentual acumulado
+Demanda y Pronóstico:
+Demanda histórica de 12 meses
+Pronóstico de demanda calculado
+Error de pronóstico para ajustes
+Costos y Rentabilidad:
+Costo de almacenamiento por producto
+Costo de pedido optimizado
+ROI por línea de producto
+Tiempo y Estacionalidad:
+Factor de estacionalidad mensual
+Días sin movimiento de stock
+Tiempo de vida útil restante
+Calidad y Control:
+Tasa de productos defectuosos
+Porcentaje de merma
+Identificación de productos obsoletos
+Proveedor y Compras:
+Lead time promedio de entrega
+Confiabilidad del proveedor
+Costo de transporte por unidad
+Fórmulas y Cálculos Detallados
+Fórmulas Principales para KPIs Críticos
+Punto de Reorden: (Demanda Promedio × Lead Time) + Stock Seguridad
+Esta fórmula determina el nivel exacto en que debe generarse una nueva orden de compra, considerando el tiempo de entrega y un buffer de seguridad.
+Stock de Seguridad: Factor Servicio × √(Lead Time × Varianza Demanda)
+Calcula el inventario adicional necesario para mantener el nivel de servicio deseado ante variaciones en demanda y tiempo de entrega.
+Cantidad Económica de Pedido (EOQ): Q = √(2×D×S/H)
+Donde D = demanda anual, S = costo de pedido, H = costo de mantenimiento. Optimiza la cantidad de compra minimizando costos totales.
+Cobertura de Stock: Stock Actual / Demanda Promedio Diaria
+Indica cuántos días de venta puede satisfacer el stock actual, útil para planificación de compras.
+Métricas para Toma de Decisiones Específicas
+Productos para LIQUIDAR: Se identifican mediante tres criterios principales:
+Días sin movimiento > 180 días + Margen < 20%
+Margen de contribución < 15% + Rotación < 2
+Costo de almacenamiento > 25% del valor del producto
+Productos para REPONER: Se detectan automáticamente mediante:
+Stock actual ≤ Stock mínimo establecido
+Demanda proyectada > Stock disponible
+Lead time + Stock actual < Demanda durante lead time
+Sistema de Alertas Automatizadas
+Configuración de Alertas Críticas
+El dashboard incluye un sistema de alertas automáticas que monitora continuamente el estado del inventario y genera notificaciones según configuraciones predefinidas:
+Stock Crítico (Prioridad Alta): stock_actual ≤ stock_minimo × 0.5
+Genera orden de compra urgente o transferencia entre almacenes.
+Exceso de Stock (Prioridad Baja): stock_actual ≥ stock_maximo × 1.2
+Sugiere evaluación de descuentos o promociones para liquidar excedentes.
+Productos Vencidos (Prioridad Alta): fecha_vencimiento ≤ fecha_actual + 30 días
+Alerta para liquidación inmediata o descarte seguro.
+Diferencia de Inventario (Prioridad Alta): ABS(stock_físico - stock_sistema) > tolerancia
+Requiere conteo físico y ajuste de registros.
+Beneficios Esperados
+Reducción de Costos: Optimización de niveles de inventario puede reducir costos de almacenamiento entre 15-25%
+Mejora en Nivel de Servicio: Implementación de alertas automáticas mejora disponibilidad de productos en 20-30%
+Eficiencia Operativa: Automatización de procesos de reorden reduce tiempo de gestión manual en 40-50%
+Toma de Decisiones: Acceso a información en tiempo real mejora velocidad de decisiones críticas en 60%

@@ -1,4 +1,15 @@
-import { type User, type InsertUser, type Dashboard, type InsertDashboard, type Product, type InsertProduct, type Sale, type InsertSale, type Collection, type InsertCollection } from "@shared/schema";
+import { 
+  type User, type InsertUser, 
+  type Dashboard, type InsertDashboard, 
+  type Category, type InsertCategory,
+  type Supplier, type InsertSupplier,
+  type Warehouse, type InsertWarehouse,
+  type Product, type InsertProduct, 
+  type InventoryMovement, type InsertInventoryMovement,
+  type StockAlert, type InsertStockAlert,
+  type Sale, type InsertSale, 
+  type Collection, type InsertCollection 
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -13,11 +24,50 @@ export interface IStorage {
   createDashboard(dashboard: InsertDashboard): Promise<Dashboard>;
   updateDashboard(id: string, dashboard: Partial<Dashboard>): Promise<Dashboard | undefined>;
   
+  // Categories
+  getCategories(): Promise<Category[]>;
+  getCategory(id: string): Promise<Category | undefined>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: string, category: Partial<Category>): Promise<Category | undefined>;
+  
+  // Suppliers
+  getSuppliers(): Promise<Supplier[]>;
+  getSupplier(id: string): Promise<Supplier | undefined>;
+  createSupplier(supplier: InsertSupplier): Promise<Supplier>;
+  updateSupplier(id: string, supplier: Partial<Supplier>): Promise<Supplier | undefined>;
+  
+  // Warehouses
+  getWarehouses(): Promise<Warehouse[]>;
+  getWarehouse(id: string): Promise<Warehouse | undefined>;
+  createWarehouse(warehouse: InsertWarehouse): Promise<Warehouse>;
+  updateWarehouse(id: string, warehouse: Partial<Warehouse>): Promise<Warehouse | undefined>;
+  
   // Products
   getProducts(): Promise<Product[]>;
   getProduct(id: string): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: string, product: Partial<Product>): Promise<Product | undefined>;
+  getProductsByCategory(categoryId: string): Promise<Product[]>;
+  getProductsByWarehouse(warehouseId: string): Promise<Product[]>;
+  getProductsBySupplier(supplierId: string): Promise<Product[]>;
+  getLowStockProducts(): Promise<Product[]>;
+  getOutOfStockProducts(): Promise<Product[]>;
+  getExcessStockProducts(): Promise<Product[]>;
+  
+  // Inventory Movements
+  getInventoryMovements(): Promise<InventoryMovement[]>;
+  getInventoryMovement(id: string): Promise<InventoryMovement | undefined>;
+  createInventoryMovement(movement: InsertInventoryMovement): Promise<InventoryMovement>;
+  getMovementsByProduct(productId: string): Promise<InventoryMovement[]>;
+  getMovementsByDateRange(startDate: Date, endDate: Date): Promise<InventoryMovement[]>;
+  
+  // Stock Alerts
+  getStockAlerts(): Promise<StockAlert[]>;
+  getStockAlert(id: string): Promise<StockAlert | undefined>;
+  createStockAlert(alert: InsertStockAlert): Promise<StockAlert>;
+  updateStockAlert(id: string, alert: Partial<StockAlert>): Promise<StockAlert | undefined>;
+  getActiveAlerts(): Promise<StockAlert[]>;
+  getAlertsByProduct(productId: string): Promise<StockAlert[]>;
   
   // Sales
   getSales(): Promise<Sale[]>;
@@ -31,19 +81,34 @@ export interface IStorage {
   createCollection(collection: InsertCollection): Promise<Collection>;
   updateCollection(id: string, collection: Partial<Collection>): Promise<Collection | undefined>;
   getCollectionsByStatus(status: string): Promise<Collection[]>;
+  
+  // Analytics methods
+  getInventoryAnalytics(): Promise<any>;
+  calculateABCClassification(): Promise<void>;
+  generateStockAlerts(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private dashboards: Map<string, Dashboard>;
+  private categories: Map<string, Category>;
+  private suppliers: Map<string, Supplier>;
+  private warehouses: Map<string, Warehouse>;
   private products: Map<string, Product>;
+  private inventoryMovements: Map<string, InventoryMovement>;
+  private stockAlerts: Map<string, StockAlert>;
   private sales: Map<string, Sale>;
   private collections: Map<string, Collection>;
 
   constructor() {
     this.users = new Map();
     this.dashboards = new Map();
+    this.categories = new Map();
+    this.suppliers = new Map();
+    this.warehouses = new Map();
     this.products = new Map();
+    this.inventoryMovements = new Map();
+    this.stockAlerts = new Map();
     this.sales = new Map();
     this.collections = new Map();
     

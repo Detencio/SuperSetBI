@@ -150,6 +150,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Advanced Inventory Analytics API
+  app.get("/api/inventory/analytics", async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      const sales = await storage.getSales();
+      const movements: any[] = []; // TODO: Implement when movements are ready
+      
+      // Import the analytics utility at runtime to avoid circular dependencies
+      const { InventoryAnalytics } = await import("./inventory-utils");
+      const kpis = InventoryAnalytics.calculateKPIs(products, movements, sales);
+      
+      res.json(kpis);
+    } catch (error) {
+      res.status(500).json({ message: "Error calculating inventory analytics" });
+    }
+  });
+
+  app.get("/api/inventory/alerts", async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      const { InventoryAnalytics } = await import("./inventory-utils");
+      const alerts = InventoryAnalytics.generateAlerts(products);
+      
+      res.json(alerts);
+    } catch (error) {
+      res.status(500).json({ message: "Error generating inventory alerts" });
+    }
+  });
+
+  app.get("/api/inventory/products-analysis", async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      const sales = await storage.getSales();
+      const movements: any[] = []; // TODO: Implement when movements are ready
+      
+      const { InventoryAnalytics } = await import("./inventory-utils");
+      const analyzedProducts = products.map(product => 
+        InventoryAnalytics.analyzeProduct(product, movements, sales)
+      );
+      
+      res.json(analyzedProducts);
+    } catch (error) {
+      res.status(500).json({ message: "Error analyzing products" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
