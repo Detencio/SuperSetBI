@@ -6,6 +6,7 @@ import InventoryKPIs from "@/components/inventory/inventory-kpis";
 import InventoryAlerts from "@/components/inventory/inventory-alerts";
 import InventoryCharts from "@/components/inventory/inventory-charts";
 import InventoryRecommendations from "@/components/inventory/inventory-recommendations";
+import InventoryExecutiveDashboard from "@/components/inventory/inventory-executive-dashboard";
 import EnhancedProductTable from "@/components/inventory/enhanced-product-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, AlertTriangle, Package, Search, Filter, Download, BarChart3, TrendingUp } from "lucide-react";
+import { Plus, AlertTriangle, Package, Search, Filter, Download, BarChart3, TrendingUp, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExportButton from "@/components/ExportButton";
 import CurrencySelector from "@/components/CurrencySelector";
@@ -192,8 +193,12 @@ export default function Inventory() {
           
           {/* Main Content Tabs */}
           <div className="mt-8">
-            <Tabs defaultValue="products" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-4 max-w-md">
+            <Tabs defaultValue="executive" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-5 max-w-2xl">
+                <TabsTrigger value="executive" className="flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  <span className="hidden sm:inline">Ejecutivo</span>
+                </TabsTrigger>
                 <TabsTrigger value="products" className="flex items-center gap-2">
                   <Package className="h-4 w-4" />
                   <span className="hidden sm:inline">Productos</span>
@@ -211,6 +216,15 @@ export default function Inventory() {
                   <span className="hidden sm:inline">Recomendaciones</span>
                 </TabsTrigger>
               </TabsList>
+
+              {/* Executive Dashboard Tab */}
+              <TabsContent value="executive" className="space-y-6">
+                <InventoryExecutiveDashboard 
+                  products={finalFilteredProducts || []}
+                  kpis={inventoryKPIs}
+                  isLoading={isLoading}
+                />
+              </TabsContent>
 
               {/* Products Tab */}
               <TabsContent value="products" className="space-y-6">
