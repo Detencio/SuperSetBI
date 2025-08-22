@@ -4,6 +4,7 @@ import {
   Package, 
   CreditCard, 
   TrendingUp, 
+  Database,
   Settings, 
   Users, 
   LogOut,
@@ -21,6 +22,10 @@ const modules = [
   { name: "Control de Inventario", href: "/inventory", icon: Package },
   { name: "Gestión de Cobranza", href: "/collections", icon: CreditCard },
   { name: "Seguimiento de Ventas", href: "/sales", icon: TrendingUp },
+];
+
+const dataManagement = [
+  { name: "Gestión de Datos", href: "/data-management", icon: Database },
 ];
 
 const settings = [
@@ -142,6 +147,32 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   }`}
                 >
                   <Icon className={`h-5 w-5 ${isActive(item.href) ? "text-white" : iconColor}`} />
+                  <span className="font-medium">{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="text-xs uppercase font-semibold text-text-secondary mb-3 tracking-wider">
+            Herramientas
+          </h3>
+          <div className="space-y-1">
+            {dataManagement.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={handleLinkClick}
+                  className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-200 font-medium ${
+                    isActive(item.href)
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
+                      : "text-text-primary hover:bg-blue-50 hover:text-blue-600"
+                  }`}
+                >
+                  <Icon className={`h-5 w-5 ${isActive(item.href) ? "text-white" : "text-purple-500"}`} />
                   <span className="font-medium">{item.name}</span>
                 </Link>
               );

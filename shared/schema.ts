@@ -129,6 +129,130 @@ export const stockAlerts = pgTable("stock_alerts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Enhanced entities for complete data ingestion
+
+export const customers = pgTable("customers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  postalCode: text("postal_code"),
+  customerType: text("customer_type").notNull().default("individual"), // "individual", "business"
+  creditLimit: decimal("credit_limit", { precision: 10, scale: 2 }).default("0.00"),
+  paymentTerms: integer("payment_terms").default(30), // days
+  registrationDate: timestamp("registration_date").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const salespeople = pgTable("salespeople", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  territory: text("territory"),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0.00"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Enhanced sales table
+export const enhancedSales = pgTable("enhanced_sales", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceNumber: text("invoice_number").unique().notNull(),
+  customerId: varchar("customer_id").notNull(),
+  salespersonId: varchar("salesperson_id"),
+  saleDate: timestamp("sale_date").defaultNow(),
+  dueDate: timestamp("due_date"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0.00"),
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).default("0.00"),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  paymentStatus: text("payment_status").notNull().default("pending"), // "pending", "partial", "paid", "overdue"
+  paymentMethod: text("payment_method"), // "cash", "card", "transfer", "check", "credit"
+  channel: text("channel").default("store"), // "store", "online", "phone", "app"
+  currency: text("currency").default("USD"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const saleItems = pgTable("sale_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  saleId: varchar("sale_id").notNull(),
+  productId: varchar("product_id").notNull(),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }).default("0.00"),
+  lineTotal: decimal("line_total", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Enhanced collections/receivables
+export const accountsReceivable = pgTable("accounts_receivable", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull(),
+  invoiceId: varchar("invoice_id").notNull(),
+  invoiceDate: timestamp("invoice_date").notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
+  outstandingAmount: decimal("outstanding_amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("USD"),
+  agingDays: integer("aging_days").default(0),
+  status: text("status").notNull().default("current"), // "current", "overdue_30", "overdue_60", "overdue_90", "overdue_120+"
+  priority: text("priority").default("low"), // "low", "medium", "high", "critical"
+  collectionAgent: text("collection_agent"),
+  lastContactDate: timestamp("last_contact_date"),
+  nextContactDate: timestamp("next_contact_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const payments = pgTable("payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull(),
+  invoiceId: varchar("invoice_id"),
+  paymentDate: timestamp("payment_date").defaultNow(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: text("payment_method").notNull(), // "cash", "check", "transfer", "card"
+  reference: text("reference"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const collectionActivities = pgTable("collection_activities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull(),
+  invoiceId: varchar("invoice_id"),
+  activityType: text("activity_type").notNull(), // "call", "email", "letter", "visit", "promise", "payment"
+  activityDate: timestamp("activity_date").defaultNow(),
+  agent: text("agent").notNull(),
+  notes: text("notes"),
+  result: text("result"), // "contacted", "no_answer", "promise", "dispute", "paid"
+  followUpDate: timestamp("follow_up_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Data import tracking
+export const dataImports = pgTable("data_imports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  importType: text("import_type").notNull(), // "api", "csv", "excel", "json"
+  dataType: text("data_type").notNull(), // "inventory", "sales", "collections"
+  fileName: text("file_name"),
+  totalRecords: integer("total_records").default(0),
+  processedRecords: integer("processed_records").default(0),
+  successfulRecords: integer("successful_records").default(0),
+  failedRecords: integer("failed_records").default(0),
+  status: text("status").notNull().default("pending"), // "pending", "processing", "completed", "failed"
+  errorLog: text("error_log"),
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Keep existing collections table for backward compatibility
 export const collections = pgTable("collections", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   saleId: varchar("sale_id").notNull(),
@@ -190,6 +314,79 @@ export const insertCollectionSchema = createInsertSchema(collections).omit({
   createdAt: true,
 });
 
+// New insert schemas for enhanced entities
+export const insertCustomerSchema = createInsertSchema(customers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSalespersonSchema = createInsertSchema(salespeople).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEnhancedSaleSchema = createInsertSchema(enhancedSales).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSaleItemSchema = createInsertSchema(saleItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAccountReceivableSchema = createInsertSchema(accountsReceivable).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCollectionActivitySchema = createInsertSchema(collectionActivities).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDataImportSchema = createInsertSchema(dataImports).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Data ingestion validation schemas
+export const bulkProductsSchema = z.object({
+  data_type: z.literal("inventory"),
+  records: z.array(insertProductSchema),
+  metadata: z.object({
+    source: z.string(),
+    import_date: z.string().optional(),
+    total_records: z.number(),
+  }).optional(),
+});
+
+export const bulkSalesSchema = z.object({
+  data_type: z.literal("sales"),
+  records: z.array(insertEnhancedSaleSchema),
+  sale_items: z.array(insertSaleItemSchema).optional(),
+  metadata: z.object({
+    source: z.string(),
+    import_date: z.string().optional(),
+    total_records: z.number(),
+  }).optional(),
+});
+
+export const bulkCollectionsSchema = z.object({
+  data_type: z.literal("collections"),
+  records: z.array(insertAccountReceivableSchema),
+  metadata: z.object({
+    source: z.string(),
+    import_date: z.string().optional(),
+    total_records: z.number(),
+  }).optional(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Dashboard = typeof dashboards.$inferSelect;
@@ -210,3 +407,26 @@ export type Sale = typeof sales.$inferSelect;
 export type InsertSale = z.infer<typeof insertSaleSchema>;
 export type Collection = typeof collections.$inferSelect;
 export type InsertCollection = z.infer<typeof insertCollectionSchema>;
+
+// New types for enhanced entities
+export type Customer = typeof customers.$inferSelect;
+export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+export type Salesperson = typeof salespeople.$inferSelect;
+export type InsertSalesperson = z.infer<typeof insertSalespersonSchema>;
+export type EnhancedSale = typeof enhancedSales.$inferSelect;
+export type InsertEnhancedSale = z.infer<typeof insertEnhancedSaleSchema>;
+export type SaleItem = typeof saleItems.$inferSelect;
+export type InsertSaleItem = z.infer<typeof insertSaleItemSchema>;
+export type AccountReceivable = typeof accountsReceivable.$inferSelect;
+export type InsertAccountReceivable = z.infer<typeof insertAccountReceivableSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type CollectionActivity = typeof collectionActivities.$inferSelect;
+export type InsertCollectionActivity = z.infer<typeof insertCollectionActivitySchema>;
+export type DataImport = typeof dataImports.$inferSelect;
+export type InsertDataImport = z.infer<typeof insertDataImportSchema>;
+
+// Bulk import types
+export type BulkProducts = z.infer<typeof bulkProductsSchema>;
+export type BulkSales = z.infer<typeof bulkSalesSchema>;
+export type BulkCollections = z.infer<typeof bulkCollectionsSchema>;

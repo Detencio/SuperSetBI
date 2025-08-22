@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { registerDataIngestionRoutes } from "./data-ingestion-simple";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard Analytics
@@ -195,6 +196,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error analyzing products" });
     }
   });
+
+  // Register data ingestion routes
+  registerDataIngestionRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
