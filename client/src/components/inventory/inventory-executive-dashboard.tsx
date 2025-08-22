@@ -48,6 +48,7 @@ interface InventoryExecutiveDashboardProps {
   products: any[];
   kpis: any;
   isLoading?: boolean;
+  timePeriod?: string;
 }
 
 // Colores para los gráficos (paleta profesional)
@@ -66,7 +67,8 @@ const PIE_COLORS = [CHART_COLORS.primary, CHART_COLORS.secondary, CHART_COLORS.s
 export default function InventoryExecutiveDashboard({ 
   products = [], 
   kpis = null, 
-  isLoading = false 
+  isLoading = false,
+  timePeriod = "30"
 }: InventoryExecutiveDashboardProps) {
   const { formatDisplayCurrency } = useCurrency();
 
@@ -200,8 +202,14 @@ export default function InventoryExecutiveDashboard({
     }
   ];
 
-  // Tendencia de stock (simulada - en producción usar datos históricos)
-  const stockTrendData = Array.from({ length: 30 }, (_, i) => ({
+  // Tendencia de stock basada en el período seleccionado
+  const periodDays = parseInt(timePeriod);
+  const periodLabel = periodDays === 7 ? "7 días" : 
+                     periodDays === 30 ? "30 días" : 
+                     periodDays === 90 ? "3 meses" : 
+                     periodDays === 180 ? "6 meses" : "año";
+  
+  const stockTrendData = Array.from({ length: Math.min(periodDays, 30) }, (_, i) => ({
     day: i + 1,
     stock: Math.floor(Math.random() * 1000 + 800),
     value: Math.floor(Math.random() * 50000 + 40000),
@@ -342,7 +350,7 @@ export default function InventoryExecutiveDashboard({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Tendencia de Valor (30 días)
+                  Tendencia de Valor ({periodLabel})
                 </CardTitle>
               </CardHeader>
               <CardContent>

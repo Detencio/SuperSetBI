@@ -30,6 +30,7 @@ export default function Inventory() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
   const [advancedFilteredProducts, setAdvancedFilteredProducts] = useState<any[]>([]);
+  const [timePeriod, setTimePeriod] = useState("30");
   
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['/api/products'],
@@ -154,6 +155,18 @@ export default function Inventory() {
                 variant="dropdown"
                 size="sm"
               />
+              <Select value={timePeriod} onValueChange={setTimePeriod}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Últimos 7 días</SelectItem>
+                  <SelectItem value="30">Últimos 30 días</SelectItem>
+                  <SelectItem value="90">Últimos 3 meses</SelectItem>
+                  <SelectItem value="180">Últimos 6 meses</SelectItem>
+                  <SelectItem value="365">Último año</SelectItem>
+                </SelectContent>
+              </Select>
               <Badge variant="outline" className="font-normal">
                 {finalFilteredProducts?.length || 0} productos
               </Badge>
@@ -223,6 +236,7 @@ export default function Inventory() {
                   products={finalFilteredProducts || []}
                   kpis={inventoryKPIs}
                   isLoading={isLoading}
+                  timePeriod={timePeriod}
                 />
               </TabsContent>
 
