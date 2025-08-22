@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { DataUploader } from "@/components/DataUploader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Sidebar from "@/components/layout/sidebar";
+import TopBar from "@/components/layout/topbar";
 import { 
   Database, 
   Package, 
@@ -18,8 +21,27 @@ import {
 } from "lucide-react";
 
 export default function DataManagement() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const handleMenuClick = () => {
+    setSidebarOpen(true);
+  };
+
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar 
+          title="Gestión de Datos" 
+          subtitle="Importa y gestiona los datos de tu empresa"
+          onMenuClick={handleMenuClick}
+        />
+        <main className="flex-1 overflow-auto p-6">
+          <div className="space-y-8">
       {/* Header */}
       <div className="space-y-4">
         <div className="flex items-center gap-3">
@@ -372,6 +394,9 @@ export default function DataManagement() {
           </div>
         </CardContent>
       </Card>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
