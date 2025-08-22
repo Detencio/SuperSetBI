@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, AlertTriangle, Package, Search, Filter, Download, BarChart3, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import ExportButton from "@/components/ExportButton";
+import { getInventoryExportConfig } from "@/lib/export-utils";
 
 export default function Inventory() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -143,6 +145,31 @@ export default function Inventory() {
           onRefresh={handleRefresh}
           onMenuClick={handleMenuClick}
         />
+        
+        {/* Export Actions Bar */}
+        <div className="border-b bg-card px-4 lg:px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Badge variant="outline" className="font-normal">
+                {filteredProducts.length} productos
+              </Badge>
+              {searchTerm && (
+                <Badge variant="secondary" className="font-normal">
+                  Filtrado por: "{searchTerm}"
+                </Badge>
+              )}
+            </div>
+            <ExportButton
+              data={filteredProducts || []}
+              config={getInventoryExportConfig(filteredProducts || [])}
+              title="Exportar Inventario"
+              variant="outline"
+              showAdvancedOptions={true}
+              allowColumnSelection={true}
+              allowDateRange={false}
+            />
+          </div>
+        </div>
         
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {/* Advanced KPIs Dashboard */}

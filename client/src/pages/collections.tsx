@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Clock, AlertTriangle, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import ExportButton from "@/components/ExportButton";
+import { getCollectionsExportConfig } from "@/lib/export-utils";
 
 export default function Collections() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -104,16 +106,16 @@ export default function Collections() {
     );
   }
 
-  const totalAmount = collections.reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0);
-  const paidAmount = collections
+  const totalAmount = Array.isArray(collections) ? collections.reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0) : 0;
+  const paidAmount = Array.isArray(collections) ? collections
     .filter((c: any) => c.status === 'paid')
-    .reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0);
-  const pendingAmount = collections
+    .reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0) : 0;
+  const pendingAmount = Array.isArray(collections) ? collections
     .filter((c: any) => c.status === 'pending')
-    .reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0);
-  const overdueAmount = collections
+    .reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0) : 0;
+  const overdueAmount = Array.isArray(collections) ? collections
     .filter((c: any) => c.status === 'overdue')
-    .reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0);
+    .reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0) : 0;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -125,6 +127,49 @@ export default function Collections() {
           onRefresh={handleRefresh}
           onMenuClick={handleMenuClick}
         />
+        
+        {/* Export Actions Bar */}
+        <div className="border-b bg-card px-4 lg:px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Badge variant="outline" className="font-normal">
+                {Array.isArray(collections) ? collections.length : 0} cuentas
+              </Badge>
+              <Badge variant="secondary" className="font-normal">
+                {formatCurrency(totalAmount.toString())} por cobrar
+              </Badge>
+            </div>
+            <ExportButton
+              data={Array.isArray(collections) ? collections.map((collection: any) => ({
+                ...collection,
+                customerName: collection.customerName,
+                issueDate: collection.issueDate,
+                dueDate: collection.dueDate,
+                amount: collection.amount,
+                paidAmount: collection.paidAmount,
+                remainingAmount: collection.remainingAmount,
+                overdueDays: collection.overdueDays || 0,
+                invoiceNumber: collection.saleId,
+              })) : []}
+              config={getCollectionsExportConfig(Array.isArray(collections) ? collections.map((collection: any) => ({
+                ...collection,
+                customerName: collection.customerName,
+                issueDate: collection.issueDate,
+                dueDate: collection.dueDate,
+                amount: collection.amount,
+                paidAmount: collection.paidAmount,
+                remainingAmount: collection.remainingAmount,
+                overdueDays: collection.overdueDays || 0,
+                invoiceNumber: collection.saleId,
+              })) : [])}
+              title="Exportar Cobranza"
+              variant="outline"
+              showAdvancedOptions={true}
+              allowColumnSelection={true}
+              allowDateRange={true}
+            />
+          </div>
+        </div>
         
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {/* Summary Cards */}

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import Sidebar from "@/components/layout/sidebar";
 import TopBar from "@/components/layout/topbar";
+import { Badge } from "@/components/ui/badge";
 import KPICard from "@/components/dashboard/kpi-card";
 import SalesChart from "@/components/dashboard/sales-chart";
 import InventoryChart from "@/components/dashboard/inventory-chart";
@@ -13,12 +14,27 @@ import QuickActions from "@/components/dashboard/quick-actions";
 import { DollarSign, Package, CreditCard, TrendingUp } from "lucide-react";
 import { mockActivities } from "@/lib/mock-data";
 import { Skeleton } from "@/components/ui/skeleton";
+import ExportButton from "@/components/ExportButton";
+import { getInventoryExportConfig, getSalesExportConfig, getCollectionsExportConfig } from "@/lib/export-utils";
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
   const { data: analytics, isLoading, refetch } = useQuery({
     queryKey: ['/api/dashboard/analytics'],
+  });
+
+  // Fetch all data for comprehensive export
+  const { data: products } = useQuery({
+    queryKey: ['/api/products'],
+  });
+  
+  const { data: sales } = useQuery({
+    queryKey: ['/api/sales'],
+  });
+  
+  const { data: collections } = useQuery({
+    queryKey: ['/api/collections'],
   });
 
   const formatCurrency = (value: number) => {
@@ -100,6 +116,55 @@ export default function Dashboard() {
           onRefresh={handleRefresh}
           onMenuClick={handleMenuClick}
         />
+        
+        {/* Export Actions Bar */}
+        <div className="border-b bg-card px-4 lg:px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Badge variant="outline" className="font-normal">
+                Dashboard Ejecutivo
+              </Badge>
+              <Badge variant="secondary" className="font-normal">
+                {formatCurrency(analytics.kpis.totalRevenue)} ingresos
+              </Badge>
+            </div>
+            <ExportButton
+              data={[]}
+              config={{
+                title: 'Reporte Ejecutivo Completo',
+                subtitle: 'Dashboard integral de negocio',
+                filename: `dashboard-ejecutivo-${new Date().toISOString().split('T')[0]}`,
+                columns: [],
+                data: [],
+              }}
+              title="Exportar Dashboard"
+              variant="outline"
+              multiSheetConfigs={[
+                ...(products ? [getInventoryExportConfig(products)] : []),
+                ...(sales ? [getSalesExportConfig(sales.map((sale: any) => ({
+                  ...sale,
+                  productName: products?.find((p: any) => p.id === sale.productId)?.name || 'Producto desconocido',
+                  date: sale.saleDate,
+                  unitPrice: sale.pricePerUnit,
+                  total: sale.totalAmount,
+                  customer: sale.customerEmail,
+                  salesperson: sale.salesperson || 'N/A',
+                })))] : []),
+                ...(collections ? [getCollectionsExportConfig(collections.map((collection: any) => ({
+                  ...collection,
+                  customerName: collection.customerName,
+                  issueDate: collection.issueDate,
+                  dueDate: collection.dueDate,
+                  amount: collection.amount,
+                  paidAmount: collection.paidAmount,
+                  remainingAmount: collection.remainingAmount,
+                  overdueDays: collection.overdueDays || 0,
+                  invoiceNumber: collection.saleId,
+                })))] : [])
+              ]}
+            />
+          </div>
+        </div>
         
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {/* KPI Cards Row */}

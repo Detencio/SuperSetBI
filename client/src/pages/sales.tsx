@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, TrendingUp, ShoppingCart, DollarSign, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import ExportButton from "@/components/ExportButton";
+import { getSalesExportConfig } from "@/lib/export-utils";
 
 export default function Sales() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -49,7 +51,7 @@ export default function Sales() {
   };
 
   const getProductName = (productId: string) => {
-    if (!products) return 'Producto desconocido';
+    if (!products || !Array.isArray(products)) return 'Producto desconocido';
     const product = products.find((p: any) => p.id === productId);
     return product?.name || 'Producto desconocido';
   };
@@ -112,18 +114,18 @@ export default function Sales() {
     );
   }
 
-  const totalSales = sales.length;
-  const totalRevenue = sales.reduce((sum: number, s: any) => sum + parseFloat(s.totalAmount), 0);
+  const totalSales = Array.isArray(sales) ? sales.length : 0;
+  const totalRevenue = Array.isArray(sales) ? sales.reduce((sum: number, s: any) => sum + parseFloat(s.totalAmount), 0) : 0;
   const avgSaleValue = totalSales > 0 ? totalRevenue / totalSales : 0;
-  const uniqueCustomers = new Set(sales.map((s: any) => s.customerEmail)).size;
+  const uniqueCustomers = Array.isArray(sales) ? new Set(sales.map((s: any) => s.customerEmail)).size : 0;
 
   // Get current month sales
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
-  const monthlySales = sales.filter((s: any) => {
+  const monthlySales = Array.isArray(sales) ? sales.filter((s: any) => {
     const saleDate = new Date(s.saleDate);
     return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
-  });
+  }) : [];
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -135,6 +137,45 @@ export default function Sales() {
           onRefresh={handleRefresh}
           onMenuClick={handleMenuClick}
         />
+        
+        {/* Export Actions Bar */}
+        <div className="border-b bg-card px-4 lg:px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Badge variant="outline" className="font-normal">
+                {totalSales} ventas
+              </Badge>
+              <Badge variant="secondary" className="font-normal">
+                {formatCurrency(totalRevenue.toString())} facturado
+              </Badge>
+            </div>
+            <ExportButton
+              data={Array.isArray(sales) ? sales.map((sale: any) => ({
+                ...sale,
+                productName: getProductName(sale.productId),
+                date: sale.saleDate,
+                unitPrice: sale.pricePerUnit,
+                total: sale.totalAmount,
+                customer: sale.customerEmail,
+                salesperson: sale.salesperson || 'N/A',
+              })) : []}
+              config={getSalesExportConfig(Array.isArray(sales) ? sales.map((sale: any) => ({
+                ...sale,
+                productName: getProductName(sale.productId),
+                date: sale.saleDate,
+                unitPrice: sale.pricePerUnit,
+                total: sale.totalAmount,
+                customer: sale.customerEmail,
+                salesperson: sale.salesperson || 'N/A',
+              })) : [])}
+              title="Exportar Ventas"
+              variant="outline"
+              showAdvancedOptions={true}
+              allowColumnSelection={true}
+              allowDateRange={true}
+            />
+          </div>
+        </div>
         
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {/* Summary Cards */}
