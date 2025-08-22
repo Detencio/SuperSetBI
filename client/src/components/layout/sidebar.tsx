@@ -5,6 +5,7 @@ import {
   CreditCard, 
   TrendingUp, 
   Database,
+  Building2,
   Settings, 
   Users, 
   LogOut,
@@ -29,6 +30,7 @@ const dataManagement = [
 ];
 
 const settings = [
+  { name: "Gestión de Empresas", href: "/company-management", icon: Building2 },
   { name: "Configuración", href: "/settings", icon: Settings },
   { name: "Usuarios", href: "/users", icon: Users },
 ];

@@ -8,6 +8,7 @@ import Inventory from "@/pages/inventory";
 import Collections from "@/pages/collections";
 import Sales from "@/pages/sales";
 import DataManagement from "@/pages/data-management";
+import CompanyManagement from "@/pages/company-management";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/collections" component={Collections} />
       <Route path="/sales" component={Sales} />
       <Route path="/data-management" component={DataManagement} />
+      <Route path="/company-management" component={CompanyManagement} />
       <Route component={NotFound} />
     </Switch>
   );

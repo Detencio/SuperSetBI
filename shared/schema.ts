@@ -1,20 +1,61 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, decimal, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, decimal, timestamp, boolean, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
+
+// Multi-tenancy schema
+export const companies = pgTable("companies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  slug: varchar("slug").notNull().unique(), // URL-friendly identifier
+  email: text("email").notNull(),
+  phone: text("phone"),
+  address: text("address"),
+  website: text("website"),
+  industry: text("industry"),
+  size: text("size"), // "small", "medium", "large", "enterprise"
+  logo: text("logo"), // URL to company logo
+  settings: text("settings"), // JSON configuration
+  subscription: text("subscription").notNull().default("trial"), // "trial", "basic", "pro", "enterprise"
+  subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  maxUsers: integer("max_users").default(5),
+  maxStorage: integer("max_storage").default(1000), // MB
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const companyInvitations = pgTable("company_invitations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
+  email: text("email").notNull(),
+  role: text("role").notNull().default("user"), // "admin", "manager", "user", "viewer"
+  invitedBy: varchar("invited_by").notNull(),
+  token: varchar("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
+  companyId: varchar("company_id").notNull(),
+  username: text("username").notNull(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
-  role: text("role").notNull().default("user"),
+  role: text("role").notNull().default("user"), // "super_admin", "company_admin", "manager", "user", "viewer"
+  permissions: text("permissions"), // JSON array of specific permissions
+  lastLoginAt: timestamp("last_login_at"),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const dashboards = pgTable("dashboards", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   userId: varchar("user_id").notNull(),
   name: text("name").notNull(),
   type: text("type").notNull(), // "executive", "inventory", "collections", "sales"
@@ -25,6 +66,7 @@ export const dashboards = pgTable("dashboards", {
 
 export const categories = pgTable("categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -32,6 +74,7 @@ export const categories = pgTable("categories", {
 
 export const suppliers = pgTable("suppliers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   name: text("name").notNull(),
   contactName: text("contact_name"),
   email: text("email"),
@@ -44,6 +87,7 @@ export const suppliers = pgTable("suppliers", {
 
 export const warehouses = pgTable("warehouses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   name: text("name").notNull(),
   location: text("location"),
   capacity: integer("capacity"),
@@ -52,6 +96,7 @@ export const warehouses = pgTable("warehouses", {
 
 export const products = pgTable("products", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   sku: text("sku").unique(),
   name: text("name").notNull(),
   categoryId: varchar("category_id"),
@@ -88,6 +133,7 @@ export const products = pgTable("products", {
 
 export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   productId: varchar("product_id").notNull(),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email"),
@@ -101,6 +147,7 @@ export const sales = pgTable("sales", {
 
 export const inventoryMovements = pgTable("inventory_movements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   productId: varchar("product_id").notNull(),
   warehouseId: varchar("warehouse_id"),
   movementType: text("movement_type").notNull(), // "entrada", "salida", "transferencia", "ajuste"
@@ -118,6 +165,7 @@ export const inventoryMovements = pgTable("inventory_movements", {
 
 export const stockAlerts = pgTable("stock_alerts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   productId: varchar("product_id").notNull(),
   alertType: text("alert_type").notNull(), // "low_stock", "out_of_stock", "excess_stock", "expiring"
   priority: text("priority").notNull().default("medium"), // "low", "medium", "high", "critical"
@@ -133,6 +181,7 @@ export const stockAlerts = pgTable("stock_alerts", {
 
 export const customers = pgTable("customers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
@@ -150,6 +199,7 @@ export const customers = pgTable("customers", {
 
 export const salespeople = pgTable("salespeople", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
@@ -162,6 +212,7 @@ export const salespeople = pgTable("salespeople", {
 // Enhanced sales table
 export const enhancedSales = pgTable("enhanced_sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   invoiceNumber: text("invoice_number").unique().notNull(),
   customerId: varchar("customer_id").notNull(),
   salespersonId: varchar("salesperson_id"),
@@ -181,6 +232,7 @@ export const enhancedSales = pgTable("enhanced_sales", {
 
 export const saleItems = pgTable("sale_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   saleId: varchar("sale_id").notNull(),
   productId: varchar("product_id").notNull(),
   quantity: integer("quantity").notNull(),
@@ -193,6 +245,7 @@ export const saleItems = pgTable("sale_items", {
 // Enhanced collections/receivables
 export const accountsReceivable = pgTable("accounts_receivable", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   customerId: varchar("customer_id").notNull(),
   invoiceId: varchar("invoice_id").notNull(),
   invoiceDate: timestamp("invoice_date").notNull(),
@@ -211,6 +264,7 @@ export const accountsReceivable = pgTable("accounts_receivable", {
 
 export const payments = pgTable("payments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   customerId: varchar("customer_id").notNull(),
   invoiceId: varchar("invoice_id"),
   paymentDate: timestamp("payment_date").defaultNow(),
@@ -223,6 +277,7 @@ export const payments = pgTable("payments", {
 
 export const collectionActivities = pgTable("collection_activities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   customerId: varchar("customer_id").notNull(),
   invoiceId: varchar("invoice_id"),
   activityType: text("activity_type").notNull(), // "call", "email", "letter", "visit", "promise", "payment"
@@ -237,6 +292,7 @@ export const collectionActivities = pgTable("collection_activities", {
 // Data import tracking
 export const dataImports = pgTable("data_imports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   userId: varchar("user_id").notNull(),
   importType: text("import_type").notNull(), // "api", "csv", "excel", "json"
   dataType: text("data_type").notNull(), // "inventory", "sales", "collections"
@@ -255,6 +311,7 @@ export const dataImports = pgTable("data_imports", {
 // Keep existing collections table for backward compatibility
 export const collections = pgTable("collections", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
   saleId: varchar("sale_id").notNull(),
   customerName: text("customer_name").notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
@@ -430,3 +487,64 @@ export type InsertDataImport = z.infer<typeof insertDataImportSchema>;
 export type BulkProducts = z.infer<typeof bulkProductsSchema>;
 export type BulkSales = z.infer<typeof bulkSalesSchema>;
 export type BulkCollections = z.infer<typeof bulkCollectionsSchema>;
+
+// Multi-tenancy schema additions
+export const insertCompanySchema = createInsertSchema(companies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCompanyInvitationSchema = createInsertSchema(companyInvitations).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Relations
+export const companyRelations = relations(companies, ({ many }) => ({
+  users: many(users),
+  products: many(products),
+  sales: many(sales),
+  customers: many(customers),
+  suppliers: many(suppliers),
+  warehouses: many(warehouses),
+  invitations: many(companyInvitations),
+}));
+
+export const userRelations = relations(users, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [users.companyId],
+    references: [companies.id],
+  }),
+  dashboards: many(dashboards),
+  dataImports: many(dataImports),
+}));
+
+export const productRelations = relations(products, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [products.companyId],
+    references: [companies.id],
+  }),
+  category: one(categories, {
+    fields: [products.categoryId],
+    references: [categories.id],
+  }),
+  supplier: one(suppliers, {
+    fields: [products.supplierId],
+    references: [suppliers.id],
+  }),
+  warehouse: one(warehouses, {
+    fields: [products.warehouseId],
+    references: [warehouses.id],
+  }),
+  sales: many(sales),
+  stockAlerts: many(stockAlerts),
+  inventoryMovements: many(inventoryMovements),
+}));
+
+// Multi-tenancy types
+export type Company = typeof companies.$inferSelect;
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
+
+export type CompanyInvitation = typeof companyInvitations.$inferSelect;
+export type InsertCompanyInvitation = z.infer<typeof insertCompanyInvitationSchema>;

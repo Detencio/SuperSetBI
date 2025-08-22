@@ -1,4 +1,6 @@
 import { 
+  type Company, type InsertCompany,
+  type CompanyInvitation, type InsertCompanyInvitation,
   type User, type InsertUser, 
   type Dashboard, type InsertDashboard, 
   type Category, type InsertCategory,
@@ -21,46 +23,62 @@ import {
 import { randomUUID } from "crypto";
 
 export interface IStorage {
-  // Users
+  // Companies
+  getCompany(id: string): Promise<Company | undefined>;
+  getCompanyBySlug(slug: string): Promise<Company | undefined>;
+  createCompany(company: InsertCompany): Promise<Company>;
+  updateCompany(id: string, company: Partial<Company>): Promise<Company | undefined>;
+  getCompanies(): Promise<Company[]>;
+  deactivateCompany(id: string): Promise<void>;
+  
+  // Company Invitations
+  createCompanyInvitation(invitation: InsertCompanyInvitation): Promise<CompanyInvitation>;
+  getCompanyInvitation(token: string): Promise<CompanyInvitation | undefined>;
+  acceptCompanyInvitation(token: string): Promise<CompanyInvitation | undefined>;
+  getCompanyInvitations(companyId: string): Promise<CompanyInvitation[]>;
+  
+  // Users (now with company context)
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUsersByCompany(companyId: string): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
   
-  // Dashboards
-  getDashboards(userId: string): Promise<Dashboard[]>;
-  getDashboard(id: string): Promise<Dashboard | undefined>;
+  // Dashboards (company-scoped)
+  getDashboards(companyId: string, userId?: string): Promise<Dashboard[]>;
+  getDashboard(id: string, companyId: string): Promise<Dashboard | undefined>;
   createDashboard(dashboard: InsertDashboard): Promise<Dashboard>;
-  updateDashboard(id: string, dashboard: Partial<Dashboard>): Promise<Dashboard | undefined>;
+  updateDashboard(id: string, dashboard: Partial<Dashboard>, companyId: string): Promise<Dashboard | undefined>;
   
-  // Categories
-  getCategories(): Promise<Category[]>;
-  getCategory(id: string): Promise<Category | undefined>;
+  // Categories (company-scoped)
+  getCategories(companyId: string): Promise<Category[]>;
+  getCategory(id: string, companyId: string): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
-  updateCategory(id: string, category: Partial<Category>): Promise<Category | undefined>;
+  updateCategory(id: string, category: Partial<Category>, companyId: string): Promise<Category | undefined>;
   
-  // Suppliers
-  getSuppliers(): Promise<Supplier[]>;
-  getSupplier(id: string): Promise<Supplier | undefined>;
+  // Suppliers (company-scoped)
+  getSuppliers(companyId: string): Promise<Supplier[]>;
+  getSupplier(id: string, companyId: string): Promise<Supplier | undefined>;
   createSupplier(supplier: InsertSupplier): Promise<Supplier>;
-  updateSupplier(id: string, supplier: Partial<Supplier>): Promise<Supplier | undefined>;
+  updateSupplier(id: string, supplier: Partial<Supplier>, companyId: string): Promise<Supplier | undefined>;
   
-  // Warehouses
-  getWarehouses(): Promise<Warehouse[]>;
-  getWarehouse(id: string): Promise<Warehouse | undefined>;
+  // Warehouses (company-scoped)
+  getWarehouses(companyId: string): Promise<Warehouse[]>;
+  getWarehouse(id: string, companyId: string): Promise<Warehouse | undefined>;
   createWarehouse(warehouse: InsertWarehouse): Promise<Warehouse>;
-  updateWarehouse(id: string, warehouse: Partial<Warehouse>): Promise<Warehouse | undefined>;
+  updateWarehouse(id: string, warehouse: Partial<Warehouse>, companyId: string): Promise<Warehouse | undefined>;
   
-  // Products
-  getProducts(): Promise<Product[]>;
-  getProduct(id: string): Promise<Product | undefined>;
+  // Products (company-scoped)
+  getProducts(companyId: string): Promise<Product[]>;
+  getProduct(id: string, companyId: string): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
-  updateProduct(id: string, product: Partial<Product>): Promise<Product | undefined>;
-  getProductsByCategory(categoryId: string): Promise<Product[]>;
-  getProductsByWarehouse(warehouseId: string): Promise<Product[]>;
-  getProductsBySupplier(supplierId: string): Promise<Product[]>;
-  getLowStockProducts(): Promise<Product[]>;
-  getOutOfStockProducts(): Promise<Product[]>;
-  getExcessStockProducts(): Promise<Product[]>;
+  updateProduct(id: string, product: Partial<Product>, companyId: string): Promise<Product | undefined>;
+  getProductsByCategory(categoryId: string, companyId: string): Promise<Product[]>;
+  getProductsByWarehouse(warehouseId: string, companyId: string): Promise<Product[]>;
+  getProductsBySupplier(supplierId: string, companyId: string): Promise<Product[]>;
+  getLowStockProducts(companyId: string): Promise<Product[]>;
+  getOutOfStockProducts(companyId: string): Promise<Product[]>;
+  getExcessStockProducts(companyId: string): Promise<Product[]>;
   
   // Inventory Movements
   getInventoryMovements(): Promise<InventoryMovement[]>;
