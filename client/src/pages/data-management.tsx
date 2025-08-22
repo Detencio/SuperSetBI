@@ -244,7 +244,7 @@ export default function DataManagement() {
                           </div>
                           <div className="space-y-2">
                             <label className="text-sm font-medium">Cálculo ABC Automático</label>
-                            <Badge variant="success">Habilitado</Badge>
+                            <Badge variant="secondary">Habilitado</Badge>
                           </div>
                         </div>
                       </div>
@@ -285,7 +285,7 @@ export default function DataManagement() {
                             <p className="font-medium">Verificar Configuración de BD</p>
                             <p className="text-sm text-muted-foreground">Asegurar que DATABASE_URL esté configurado</p>
                           </div>
-                          <Badge variant="success">Listo</Badge>
+                          <Badge variant="secondary">Listo</Badge>
                         </div>
                         
                         <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">

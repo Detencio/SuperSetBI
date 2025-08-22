@@ -31,11 +31,9 @@ export default function TestDataGenerator() {
   // Mutación para generar datos de prueba
   const generateDataMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('/api/generate-test-data', {
-        method: 'POST'
-      });
+      return await apiRequest('/api/generate-test-data', 'POST');
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "✅ Datos Generados Exitosamente",
         description: `Se generaron ${data.summary.products} productos, ${data.summary.sales} ventas y ${data.summary.collections} cobranzas para todo el año 2024.`,
@@ -159,7 +157,7 @@ export default function TestDataGenerator() {
       </Card>
 
       {/* Estadísticas Actuales */}
-      {currentStats && (
+      {currentStats && currentStats.products && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -248,7 +246,7 @@ export default function TestDataGenerator() {
                   </div>
                   <div className="flex justify-between">
                     <span>Pendientes</span>
-                    <Badge variant="warning">{currentStats.collections.pending}</Badge>
+                    <Badge variant="outline">{currentStats.collections.pending}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Vencidas</span>
@@ -256,7 +254,7 @@ export default function TestDataGenerator() {
                   </div>
                   <div className="flex justify-between">
                     <span>Pagadas</span>
-                    <Badge variant="success">{currentStats.collections.paid}</Badge>
+                    <Badge variant="secondary">{currentStats.collections.paid}</Badge>
                   </div>
                   <Separator />
                   <div className="space-y-2">

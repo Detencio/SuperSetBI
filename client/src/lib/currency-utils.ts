@@ -30,18 +30,27 @@ export const EXCHANGE_RATES = {
 
 // Obtener configuración de moneda actual del localStorage o por defecto CLP
 export const getCurrentCurrency = (): CurrencyConfig => {
-  const stored = localStorage.getItem('preferred_currency');
-  return CURRENCIES[stored || 'CLP'] || CURRENCIES.CLP;
+  try {
+    const stored = typeof window !== 'undefined' && window.localStorage ? 
+      localStorage.getItem('preferred_currency') : null;
+    return CURRENCIES[stored || 'CLP'] || CURRENCIES.CLP;
+  } catch (error) {
+    return CURRENCIES.CLP;
+  }
 };
 
 // Establecer moneda preferida
 export const setCurrentCurrency = (currencyCode: string): void => {
-  if (CURRENCIES[currencyCode]) {
-    localStorage.setItem('preferred_currency', currencyCode);
-    // Disparar evento para que los componentes se actualicen
-    window.dispatchEvent(new CustomEvent('currencyChanged', { 
-      detail: { currency: CURRENCIES[currencyCode] }
-    }));
+  try {
+    if (CURRENCIES[currencyCode] && typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('preferred_currency', currencyCode);
+      // Disparar evento para que los componentes se actualicen
+      window.dispatchEvent(new CustomEvent('currencyChanged', { 
+        detail: { currency: CURRENCIES[currencyCode] }
+      }));
+    }
+  } catch (error) {
+    console.warn('No se pudo guardar la preferencia de moneda:', error);
   }
 };
 
@@ -77,7 +86,7 @@ export const formatCurrency = (
   const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   const currency = currencyCode ? CURRENCIES[currencyCode] : getCurrentCurrency();
   
-  if (isNaN(numericAmount)) return '0';
+  if (isNaN(numericAmount) || numericAmount === null || numericAmount === undefined) return '$ 0';
   
   const formatOptions: Intl.NumberFormatOptions = {
     minimumFractionDigits: options?.minimumFractionDigits ?? 0,
