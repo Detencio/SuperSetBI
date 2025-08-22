@@ -20,28 +20,35 @@ export interface ExportConfig {
   summary?: { label: string; value: string | number }[];
 }
 
+import { formatCLP, formatUSD, getCurrentCurrency } from './currency-utils';
+
 // Format value based on column format
 const formatValue = (value: any, format?: string): string => {
   if (value == null) return '';
   
   switch (format) {
     case 'currency':
-      return new Intl.NumberFormat('es-MX', {
-        style: 'currency',
-        currency: 'MXN',
-      }).format(Number(value));
+      const currentCurrency = getCurrentCurrency();
+      if (currentCurrency.code === 'USD') {
+        // Convertir de CLP a USD y formatear
+        const usdValue = Number(value) * 0.0011; // Tasa de cambio aproximada
+        return formatUSD(usdValue, 2);
+      } else {
+        // Formatear en pesos chilenos
+        return formatCLP(Number(value), 0);
+      }
       
     case 'number':
-      return new Intl.NumberFormat('es-MX').format(Number(value));
+      return Number(value).toLocaleString('es-CL');
       
     case 'percentage':
-      return new Intl.NumberFormat('es-MX', {
+      return new Intl.NumberFormat('es-CL', {
         style: 'percent',
         minimumFractionDigits: 2,
       }).format(Number(value) / 100);
       
     case 'date':
-      return new Date(value).toLocaleDateString('es-MX');
+      return new Date(value).toLocaleDateString('es-CL');
       
     default:
       return String(value);
@@ -325,7 +332,7 @@ export const getInventoryExportConfig = (products: any[]): ExportConfig => ({
   })),
   summary: [
     { label: 'Total Productos', value: products.length },
-    { label: 'Valor Total Inventario', value: new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(products.reduce((sum, p) => sum + (p.currentStock * p.unitCost), 0)) },
+    { label: 'Valor Total Inventario', value: formatCLP(products.reduce((sum, p) => sum + (p.currentStock * p.unitCost), 0)) },
     { label: 'Productos Bajo Stock', value: products.filter(p => p.currentStock <= p.minStock).length },
   ],
 });
@@ -346,8 +353,8 @@ export const getSalesExportConfig = (sales: any[]): ExportConfig => ({
   data: sales,
   summary: [
     { label: 'Total Ventas', value: sales.length },
-    { label: 'Ingresos Totales', value: new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(sales.reduce((sum, s) => sum + s.total, 0)) },
-    { label: 'Venta Promedio', value: new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(sales.reduce((sum, s) => sum + s.total, 0) / sales.length) },
+    { label: 'Ingresos Totales', value: formatCLP(sales.reduce((sum, s) => sum + s.total, 0)) },
+    { label: 'Venta Promedio', value: formatCLP(sales.length > 0 ? sales.reduce((sum, s) => sum + s.total, 0) / sales.length : 0) },
   ],
 });
 
@@ -369,8 +376,8 @@ export const getCollectionsExportConfig = (collections: any[]): ExportConfig => 
   data: collections,
   summary: [
     { label: 'Total Facturas', value: collections.length },
-    { label: 'Monto Total', value: new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(collections.reduce((sum, c) => sum + c.amount, 0)) },
-    { label: 'Total Cobrado', value: new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(collections.reduce((sum, c) => sum + c.paidAmount, 0)) },
-    { label: 'Pendiente de Cobro', value: new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(collections.reduce((sum, c) => sum + c.remainingAmount, 0)) },
+    { label: 'Monto Total', value: formatCLP(collections.reduce((sum, c) => sum + c.amount, 0)) },
+    { label: 'Total Cobrado', value: formatCLP(collections.reduce((sum, c) => sum + c.paidAmount, 0)) },
+    { label: 'Pendiente de Cobro', value: formatCLP(collections.reduce((sum, c) => sum + c.remainingAmount, 0)) },
   ],
 });

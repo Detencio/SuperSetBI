@@ -3,6 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { registerDataIngestionRoutes } from "./data-ingestion-simple";
 import { registerCompanyRoutes } from "./company-routes";
+import { 
+  generateProducts, 
+  generateSales, 
+  generateCollections, 
+  generateInventoryAlerts 
+} from "./mock-data-generator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard Analytics
@@ -203,6 +209,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register company management routes
   registerCompanyRoutes(app);
+
+  // Endpoint para generar datos de prueba completos del año
+  app.post("/api/generate-test-data", async (req, res) => {
+    try {
+      console.log("🔄 Generando datos de prueba completos para un año...");
+      
+      // Limpiar datos existentes
+      await storage.clearAllData();
+      console.log("✅ Datos existentes limpiados");
+      
+      // Generar productos (150 productos variados)
+      const products = generateProducts(150);
+      for (const product of products) {
+        await storage.createProduct(product);
+      }
+      console.log(`✅ Generados ${products.length} productos`);
+      
+      // Generar ventas del año completo (3000 ventas)
+      const sales = generateSales(products, 3000);
+      for (const sale of sales) {
+        await storage.createSale(sale);
+      }
+      console.log(`✅ Generadas ${sales.length} ventas`);
+      
+      // Generar cobranzas basadas en las ventas
+      const collections = generateCollections(sales);
+      for (const collection of collections) {
+        await storage.createCollection(collection);
+      }
+      console.log(`✅ Generadas ${collections.length} cobranzas`);
+      
+      // Generar alertas de inventario
+      const alerts = generateInventoryAlerts(products);
+      console.log(`✅ Generadas ${alerts.length} alertas de inventario`);
+      
+      const summary = {
+        products: products.length,
+        sales: sales.length,
+        collections: collections.length,
+        alerts: alerts.length,
+        totalRevenue: sales.reduce((sum, s) => sum + s.totalAmount, 0),
+        dateRange: {
+          start: '2024-01-01',
+          end: '2024-12-31'
+        },
+        categories: [...new Set(products.map(p => p.category))].length,
+        customers: [...new Set(sales.map(s => s.customerEmail))].length
+      };
+      
+      console.log("🎉 Datos de prueba generados exitosamente:", summary);
+      
+      res.json({
+        success: true,
+        message: "Datos de prueba generados exitosamente para un año completo",
+        summary
+      });
+      
+    } catch (error) {
+      console.error("❌ Error generando datos de prueba:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor al generar datos de prueba"
+      });
+    }
+  });
+
+  // Endpoint para obtener estadísticas de los datos actuales
+  app.get("/api/data-statistics", async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      const sales = await storage.getSales();
+      const collections = await storage.getCollections();
+      
+      const stats = {
+        products: {
+          total: products.length,
+          categories: [...new Set(products.map(p => p.category))].length,
+          lowStock: products.filter(p => p.currentStock <= p.minStock).length,
+          outOfStock: products.filter(p => p.currentStock === 0).length,
+          totalValue: products.reduce((sum, p) => sum + (p.currentStock * p.unitCost), 0)
+        },
+        sales: {
+          total: sales.length,
+          totalRevenue: sales.reduce((sum, s) => sum + (parseFloat(String(s.totalAmount || 0))), 0),
+          customers: [...new Set(sales.map(s => s.customerEmail))].length,
+          thisYear: sales.filter(s => new Date(s.saleDate).getFullYear() === 2024).length,
+          thisMonth: sales.filter(s => {
+            const saleDate = new Date(s.saleDate);
+            const now = new Date();
+            return saleDate.getMonth() === now.getMonth() && 
+                   saleDate.getFullYear() === now.getFullYear();
+          }).length
+        },
+        collections: {
+          total: collections.length,
+          pending: collections.filter(c => c.status === 'pending').length,
+          overdue: collections.filter(c => c.status === 'overdue').length,
+          paid: collections.filter(c => c.status === 'paid').length,
+          totalAmount: collections.reduce((sum, c) => sum + (parseFloat(String(c.amount || 0))), 0),
+          totalPaid: collections.reduce((sum, c) => sum + (parseFloat(String(c.paidAmount || 0))), 0)
+        }
+      };
+      
+      res.json(stats);
+      
+    } catch (error) {
+      console.error("Error obteniendo estadísticas:", error);
+      res.status(500).json({
+        error: "Error interno del servidor"
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

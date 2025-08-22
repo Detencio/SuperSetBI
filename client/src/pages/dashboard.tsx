@@ -15,10 +15,13 @@ import { DollarSign, Package, CreditCard, TrendingUp } from "lucide-react";
 import { mockActivities } from "@/lib/mock-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExportButton from "@/components/ExportButton";
+import CurrencySelector from "@/components/CurrencySelector";
 import { getInventoryExportConfig, getSalesExportConfig, getCollectionsExportConfig } from "@/lib/export-utils";
+import { formatCLP, formatCurrencyWithConversion } from "@/lib/currency-utils";
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [currency, setCurrency] = useState<'CLP' | 'USD'>('CLP');
   
   const { data: analytics, isLoading, refetch } = useQuery({
     queryKey: ['/api/dashboard/analytics'],
@@ -38,12 +41,10 @@ export default function Dashboard() {
   });
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+    if (currency === 'USD') {
+      return formatCurrencyWithConversion(value, currency).converted || formatCLP(value);
+    }
+    return formatCLP(value);
   };
 
   const handleRefresh = () => {
@@ -121,6 +122,10 @@ export default function Dashboard() {
         <div className="border-b bg-card px-4 lg:px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <CurrencySelector 
+                currency={currency} 
+                onCurrencyChange={setCurrency}
+              />
               <Badge variant="outline" className="font-normal">
                 Dashboard Ejecutivo
               </Badge>
