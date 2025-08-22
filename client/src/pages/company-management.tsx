@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Sidebar from "@/components/layout/sidebar";
+import TopBar from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,6 +80,7 @@ interface CompanyInvitation {
 }
 
 export default function CompanyManagement() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
@@ -97,6 +100,14 @@ export default function CompanyManagement() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const handleMenuClick = () => {
+    setSidebarOpen(true);
+  };
+
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+  };
 
   // Fetch companies
   const { data: companies = [], isLoading: loadingCompanies } = useQuery({
@@ -242,7 +253,16 @@ export default function CompanyManagement() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar 
+          title="Gestión de Empresas" 
+          subtitle="Administra empresas y usuarios del sistema"
+          onMenuClick={handleMenuClick}
+        />
+        <main className="flex-1 overflow-auto p-6">
+          <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -714,6 +734,9 @@ export default function CompanyManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
