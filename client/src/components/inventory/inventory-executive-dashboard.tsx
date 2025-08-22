@@ -126,18 +126,34 @@ export default function InventoryExecutiveDashboard({
     value: Math.round(cat.value)
   }));
 
-  // Análisis de rotación de inventario
-  const turnoverAnalysis = products.map(product => {
-    const monthlySales = Math.random() * 50 + 10; // Simulado - en producción usar datos reales
-    const turnover = product.stock > 0 ? (monthlySales * 12) / product.stock : 0;
-    return {
-      name: product.name,
-      turnover: Math.round(turnover * 100) / 100,
-      stock: product.stock,
-      value: product.price * product.stock,
-      category: product.category
-    };
-  }).sort((a, b) => b.turnover - a.turnover).slice(0, 10);
+  // Primero definir las variables temporales
+  const periodDays = parseInt(timePeriod);
+  const periodLabel = periodDays === 7 ? "7 días" : 
+                     periodDays === 30 ? "30 días" : 
+                     periodDays === 90 ? "3 meses" : 
+                     periodDays === 180 ? "6 meses" : "año";
+
+  // Análisis de rotación de inventario basado en período
+  const generateTurnoverData = () => {
+    const multiplier = periodDays === 7 ? 0.1 : 
+                      periodDays === 30 ? 1 : 
+                      periodDays === 90 ? 3 : 
+                      periodDays === 180 ? 6 : 12;
+    
+    return products.map(product => {
+      const periodSales = (Math.random() * 50 + 10) * multiplier;
+      const turnover = product.stock > 0 ? periodSales / product.stock : 0;
+      return {
+        name: product.name,
+        turnover: Math.round(turnover * 100) / 100,
+        stock: product.stock,
+        value: product.price * product.stock,
+        category: product.category
+      };
+    }).sort((a, b) => b.turnover - a.turnover).slice(0, 10);
+  };
+  
+  const turnoverAnalysis = generateTurnoverData();
 
   // Estado del inventario para gráfico de barras
   const inventoryStatusData = [
@@ -174,7 +190,7 @@ export default function InventoryExecutiveDashboard({
     { name: 'Categoría C', count: abcAnalysis.filter(p => p.abcCategory === 'C').length, value: 'Bajo Valor' }
   ];
 
-  // Métricas de rendimiento
+  // Métricas de rendimiento (después de calcular turnoverAnalysis)
   const performanceMetrics = [
     {
       title: 'Eficiencia de Stock',
@@ -185,9 +201,9 @@ export default function InventoryExecutiveDashboard({
       bgColor: 'bg-blue-50'
     },
     {
-      title: 'Rotación Promedio',
-      value: Math.round(turnoverAnalysis.reduce((sum, item) => sum + item.turnover, 0) / turnoverAnalysis.length * 100) / 100,
-      target: 6,
+      title: `Rotación Promedio (${periodLabel})`,
+      value: turnoverAnalysis.length > 0 ? Math.round(turnoverAnalysis.reduce((sum, item) => sum + item.turnover, 0) / turnoverAnalysis.length * 100) / 100 : 0,
+      target: periodDays === 7 ? 0.5 : periodDays === 30 ? 2 : periodDays === 90 ? 6 : periodDays === 180 ? 12 : 24,
       icon: Activity,
       color: 'text-green-600',
       bgColor: 'bg-green-50'
@@ -202,19 +218,64 @@ export default function InventoryExecutiveDashboard({
     }
   ];
 
-  // Tendencia de stock basada en el período seleccionado
-  const periodDays = parseInt(timePeriod);
-  const periodLabel = periodDays === 7 ? "7 días" : 
-                     periodDays === 30 ? "30 días" : 
-                     periodDays === 90 ? "3 meses" : 
-                     periodDays === 180 ? "6 meses" : "año";
+  // Generar datos adaptativos según el período
+  const generateTrendData = () => {
+    if (periodDays === 7) {
+      // Para 7 días: mostrar días de la semana
+      const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      return days.map((day, i) => ({
+        period: day,
+        stock: Math.floor(Math.random() * 1000 + 800),
+        value: Math.floor(Math.random() * 50000 + 40000),
+        alerts: Math.floor(Math.random() * 5)
+      }));
+    } else if (periodDays === 30) {
+      // Para 30 días: mostrar por días del mes (cada 5 días)
+      return Array.from({ length: 6 }, (_, i) => ({
+        period: `Día ${(i * 5) + 1}`,
+        stock: Math.floor(Math.random() * 1000 + 800),
+        value: Math.floor(Math.random() * 50000 + 40000),
+        alerts: Math.floor(Math.random() * 5)
+      }));
+    } else if (periodDays === 90) {
+      // Para 3 meses: mostrar por meses
+      const currentMonth = new Date().getMonth();
+      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      return Array.from({ length: 3 }, (_, i) => {
+        const monthIndex = (currentMonth - 2 + i + 12) % 12;
+        return {
+          period: months[monthIndex],
+          stock: Math.floor(Math.random() * 1000 + 800),
+          value: Math.floor(Math.random() * 50000 + 40000),
+          alerts: Math.floor(Math.random() * 5)
+        };
+      });
+    } else if (periodDays === 180) {
+      // Para 6 meses: mostrar por meses
+      const currentMonth = new Date().getMonth();
+      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      return Array.from({ length: 6 }, (_, i) => {
+        const monthIndex = (currentMonth - 5 + i + 12) % 12;
+        return {
+          period: months[monthIndex],
+          stock: Math.floor(Math.random() * 1000 + 800),
+          value: Math.floor(Math.random() * 50000 + 40000),
+          alerts: Math.floor(Math.random() * 5)
+        };
+      });
+    } else {
+      // Para 1 año: mostrar por trimestres
+      const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+      return quarters.map((quarter, i) => ({
+        period: quarter,
+        stock: Math.floor(Math.random() * 1000 + 800),
+        value: Math.floor(Math.random() * 50000 + 40000),
+        alerts: Math.floor(Math.random() * 5)
+      }));
+    }
+  };
   
-  const stockTrendData = Array.from({ length: Math.min(periodDays, 30) }, (_, i) => ({
-    day: i + 1,
-    stock: Math.floor(Math.random() * 1000 + 800),
-    value: Math.floor(Math.random() * 50000 + 40000),
-    alerts: Math.floor(Math.random() * 5)
-  }));
+  const stockTrendData = generateTrendData();
 
   return (
     <div className="space-y-6">
@@ -357,7 +418,7 @@ export default function InventoryExecutiveDashboard({
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={stockTrendData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
+                    <XAxis dataKey="period" />
                     <YAxis />
                     <Tooltip 
                       formatter={(value, name) => [
@@ -474,7 +535,7 @@ export default function InventoryExecutiveDashboard({
             {/* Top Productos por Rotación */}
             <Card>
               <CardHeader>
-                <CardTitle>Top 10 - Rotación de Inventario</CardTitle>
+                <CardTitle>Top 10 - Rotación de Inventario ({periodLabel})</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -490,7 +551,7 @@ export default function InventoryExecutiveDashboard({
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900">{product.turnover}x</p>
+                        <p className="font-semibold text-gray-900">{product.turnover}x/{periodLabel}</p>
                         <p className="text-sm text-gray-500">{product.stock} stock</p>
                       </div>
                     </div>
@@ -502,7 +563,7 @@ export default function InventoryExecutiveDashboard({
             {/* Gráfico de Rotación */}
             <Card>
               <CardHeader>
-                <CardTitle>Rotación por Categoría</CardTitle>
+                <CardTitle>Rotación por Categoría ({periodLabel})</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
