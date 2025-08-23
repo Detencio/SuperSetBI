@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export default function AIAssistantPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedQuickPrompt, setSelectedQuickPrompt] = useState<string>('');
 
   // Obtener insights de inventario
   const { data: inventoryInsights } = useQuery({
@@ -51,7 +52,10 @@ export default function AIAssistantPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Chat Principal */}
               <div className="lg:col-span-2">
-                <AIAssistant />
+                <AIAssistant 
+                  quickPrompt={selectedQuickPrompt}
+                  onQuickPromptProcessed={() => setSelectedQuickPrompt('')}
+                />
               </div>
 
               {/* Panel Lateral */}
@@ -71,8 +75,7 @@ export default function AIAssistantPage() {
                           key={index}
                           className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
                           onClick={() => {
-                            // Aquí podrías integrar con el componente de chat para enviar automáticamente la pregunta
-                            console.log('Quick prompt:', prompt);
+                            setSelectedQuickPrompt(prompt);
                           }}
                           data-testid={`quick-prompt-${index}`}
                         >

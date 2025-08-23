@@ -42,7 +42,12 @@ const typeIcons = {
   recommendation: '💡'
 };
 
-export default function AIAssistant() {
+interface AIAssistantProps {
+  quickPrompt?: string;
+  onQuickPromptProcessed?: () => void;
+}
+
+export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIAssistantProps = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -60,12 +65,28 @@ export default function AIAssistant() {
     scrollToBottom();
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+  // Procesar preguntas rápidas
+  useEffect(() => {
+    if (quickPrompt && quickPrompt.trim()) {
+      setInputMessage(quickPrompt);
+      setActiveTab('chat');
+      // Enviar automáticamente después de un pequeño delay
+      setTimeout(() => {
+        sendMessage(quickPrompt);
+        if (onQuickPromptProcessed) {
+          onQuickPromptProcessed();
+        }
+      }, 100);
+    }
+  }, [quickPrompt]);
+
+  const sendMessage = async (messageToSend?: string) => {
+    const message = messageToSend || inputMessage.trim();
+    if (!message || isLoading) return;
 
     const userMessage: ChatMessage = {
       role: 'user',
-      content: inputMessage.trim(),
+      content: message,
       timestamp: new Date()
     };
 
@@ -80,7 +101,7 @@ export default function AIAssistant() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: userMessage.content,
+          message: message,
           conversationHistory: messages.slice(-5) // Últimos 5 mensajes para contexto
         }),
       });
