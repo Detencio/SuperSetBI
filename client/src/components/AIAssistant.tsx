@@ -150,6 +150,7 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
   // Procesar preguntas rápidas
   useEffect(() => {
     if (quickPrompt && quickPrompt.trim()) {
+      console.log('Processing quick prompt:', quickPrompt);
       setInputMessage(quickPrompt);
       setActiveTab('chat');
       // Enviar automáticamente la pregunta rápida después de mostrarla
@@ -158,7 +159,7 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
         if (onQuickPromptProcessed) {
           onQuickPromptProcessed();
         }
-      }, 500);
+      }, 1000); // Aumenté el tiempo para que se vea mejor
     }
   }, [quickPrompt]);
 
@@ -309,7 +310,7 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`flex w-full max-w-[90%] ${
+                        className={`flex max-w-[80%] ${
                           message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                         }`}
                       >
@@ -329,14 +330,14 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                           )}
                         </div>
                         <div
-                          className={`rounded-xl shadow-sm border flex-1 max-w-full ${
+                          className={`rounded-xl shadow-sm border min-w-0 flex-1 ${
                             message.role === 'user'
                               ? 'bg-superset-blue text-white border-superset-blue'
                               : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700'
                           }`}
                         >
-                          <div className="p-4 overflow-hidden">
-                            <div className={`text-sm ${message.role === 'assistant' ? 'break-words' : 'whitespace-pre-wrap break-words'} leading-relaxed`}>
+                          <div className="p-4">
+                            <div className={`text-sm leading-relaxed overflow-wrap-anywhere ${message.role === 'assistant' ? '' : 'whitespace-pre-wrap'}`}>
                               {message.role === 'assistant' ? (
                                 <FormattedMessage content={message.content} />
                               ) : (
