@@ -150,9 +150,8 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
   // Procesar preguntas rápidas
   useEffect(() => {
     if (quickPrompt && quickPrompt.trim()) {
-      setInputMessage(quickPrompt);
       setActiveTab('chat');
-      // Enviar automáticamente después de un pequeño delay
+      // Enviar automáticamente la pregunta rápida
       setTimeout(() => {
         sendMessage(quickPrompt);
         if (onQuickPromptProcessed) {
@@ -309,7 +308,7 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`flex max-w-[85%] ${
+                        className={`flex w-full max-w-[90%] ${
                           message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                         }`}
                       >
@@ -329,14 +328,14 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                           )}
                         </div>
                         <div
-                          className={`rounded-xl shadow-sm border ${
+                          className={`rounded-xl shadow-sm border flex-1 max-w-full ${
                             message.role === 'user'
                               ? 'bg-superset-blue text-white border-superset-blue'
                               : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700'
                           }`}
                         >
-                          <div className="p-4">
-                            <div className={`text-sm ${message.role === 'assistant' ? '' : 'whitespace-pre-wrap'} leading-relaxed`}>
+                          <div className="p-4 overflow-hidden">
+                            <div className={`text-sm ${message.role === 'assistant' ? 'break-words' : 'whitespace-pre-wrap break-words'} leading-relaxed`}>
                               {message.role === 'assistant' ? (
                                 <FormattedMessage content={message.content} />
                               ) : (
