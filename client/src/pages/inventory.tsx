@@ -266,6 +266,7 @@ export default function Inventory() {
                 <InventoryCharts 
                   products={finalFilteredProducts || []}
                   isLoading={isLoading}
+                  timePeriod={timePeriod}
                 />
               </TabsContent>
 
