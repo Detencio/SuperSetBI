@@ -31,7 +31,8 @@ export default function TestDataGenerator() {
   // Mutación para generar datos de prueba
   const generateDataMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('/api/generate-test-data', 'POST');
+      const response = await apiRequest('POST', '/api/generate-test-data');
+      return await response.json();
     },
     onSuccess: (data: any) => {
       toast({
@@ -157,7 +158,7 @@ export default function TestDataGenerator() {
       </Card>
 
       {/* Estadísticas Actuales */}
-      {currentStats && currentStats.products && (
+      {currentStats && (currentStats as any)?.products && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -178,25 +179,25 @@ export default function TestDataGenerator() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>Total Productos</span>
-                    <Badge variant="secondary">{currentStats.products.total}</Badge>
+                    <Badge variant="secondary">{(currentStats as any).products.total}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Categorías</span>
-                    <Badge variant="outline">{currentStats.products.categories}</Badge>
+                    <Badge variant="outline">{(currentStats as any).products.categories}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Stock Bajo</span>
-                    <Badge variant="destructive">{currentStats.products.lowStock}</Badge>
+                    <Badge variant="destructive">{(currentStats as any).products.lowStock}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Sin Stock</span>
-                    <Badge variant="destructive">{currentStats.products.outOfStock}</Badge>
+                    <Badge variant="destructive">{(currentStats as any).products.outOfStock}</Badge>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold">
                     <span>Valor Total</span>
                     <span className="text-green-600">
-                      {formatCLP(currentStats.products.totalValue)}
+                      {formatCLP((currentStats as any).products.totalValue)}
                     </span>
                   </div>
                 </div>
@@ -210,25 +211,25 @@ export default function TestDataGenerator() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>Total Ventas</span>
-                    <Badge variant="secondary">{currentStats.sales.total}</Badge>
+                    <Badge variant="secondary">{(currentStats as any).sales.total}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Clientes</span>
-                    <Badge variant="outline">{currentStats.sales.customers}</Badge>
+                    <Badge variant="outline">{(currentStats as any).sales.customers}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Este Año</span>
-                    <Badge variant="secondary">{currentStats.sales.thisYear}</Badge>
+                    <Badge variant="secondary">{(currentStats as any).sales.thisYear}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Este Mes</span>
-                    <Badge variant="secondary">{currentStats.sales.thisMonth}</Badge>
+                    <Badge variant="secondary">{(currentStats as any).sales.thisMonth}</Badge>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold">
                     <span>Ingresos Totales</span>
                     <span className="text-green-600">
-                      {formatCLP(currentStats.sales.totalRevenue)}
+                      {formatCLP((currentStats as any).sales.totalRevenue)}
                     </span>
                   </div>
                 </div>
@@ -242,32 +243,32 @@ export default function TestDataGenerator() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>Total Facturas</span>
-                    <Badge variant="secondary">{currentStats.collections.total}</Badge>
+                    <Badge variant="secondary">{(currentStats as any).collections.total}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Pendientes</span>
-                    <Badge variant="outline">{currentStats.collections.pending}</Badge>
+                    <Badge variant="outline">{(currentStats as any).collections.pending}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Vencidas</span>
-                    <Badge variant="destructive">{currentStats.collections.overdue}</Badge>
+                    <Badge variant="destructive">{(currentStats as any).collections.overdue}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span>Pagadas</span>
-                    <Badge variant="secondary">{currentStats.collections.paid}</Badge>
+                    <Badge variant="secondary">{(currentStats as any).collections.paid}</Badge>
                   </div>
                   <Separator />
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Por Cobrar</span>
                       <span className="text-blue-600">
-                        {formatCLP(currentStats.collections.totalAmount)}
+                        {formatCLP((currentStats as any).collections.totalAmount)}
                       </span>
                     </div>
                     <div className="flex justify-between font-semibold">
                       <span>Ya Cobrado</span>
                       <span className="text-green-600">
-                        {formatCLP(currentStats.collections.totalPaid)}
+                        {formatCLP((currentStats as any).collections.totalPaid)}
                       </span>
                     </div>
                   </div>

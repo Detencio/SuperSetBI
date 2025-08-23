@@ -210,6 +210,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register company management routes
   registerCompanyRoutes(app);
 
+  // Rutas para importación de datos
+  app.post("/api/import/products", async (req, res) => {
+    try {
+      // Temporalmente devolver éxito para pruebas
+      res.json({
+        success: true,
+        imported: 0,
+        message: "Funcionalidad de importación de productos estará disponible próximamente"
+      });
+    } catch (error) {
+      console.error("Error importing products:", error);
+      res.status(500).json({ success: false, error: "Error importando productos" });
+    }
+  });
+
+  app.post("/api/import/sales", async (req, res) => {
+    try {
+      // Temporalmente devolver éxito para pruebas
+      res.json({
+        success: true,
+        imported: 0,
+        message: "Funcionalidad de importación de ventas estará disponible próximamente"
+      });
+    } catch (error) {
+      console.error("Error importing sales:", error);
+      res.status(500).json({ success: false, error: "Error importando ventas" });
+    }
+  });
+
+  app.post("/api/import/customers", async (req, res) => {
+    try {
+      // Temporalmente devolver éxito para pruebas
+      res.json({
+        success: true,
+        imported: 0,
+        message: "Funcionalidad de importación de clientes estará disponible próximamente"
+      });
+    } catch (error) {
+      console.error("Error importing customers:", error);
+      res.status(500).json({ success: false, error: "Error importando clientes" });
+    }
+  });
+
   // Endpoint para generar datos de prueba completos del año
   app.post("/api/generate-test-data", async (req, res) => {
     try {

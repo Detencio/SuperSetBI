@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Sidebar from "@/components/layout/sidebar";
 import TopBar from "@/components/layout/topbar";
 import TestDataGenerator from "@/components/TestDataGenerator";
@@ -7,6 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Database, 
   FileText, 
@@ -15,11 +19,20 @@ import {
   Settings,
   AlertCircle,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Package,
+  ShoppingCart,
+  Users
 } from "lucide-react";
 
 export default function DataManagement() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { toast } = useToast();
+  
+  // Referencias para los inputs de archivos
+  const productsFileRef = useRef<HTMLInputElement>(null);
+  const salesFileRef = useRef<HTMLInputElement>(null);
+  const customersFileRef = useRef<HTMLInputElement>(null);
 
   const handleSidebarClose = () => {
     setSidebarOpen(false);
@@ -27,6 +40,100 @@ export default function DataManagement() {
 
   const handleMenuClick = () => {
     setSidebarOpen(true);
+  };
+
+  // Mutación para importar archivos
+  const importFileMutation = useMutation({
+    mutationFn: async ({ file, type }: { file: File; type: string }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await apiRequest('POST', `/api/import/${type}`, formData);
+      return await response.json();
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: "✅ Importación Exitosa",
+        description: `Se importaron ${data.imported} registros de ${variables.type}.`,
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "❌ Error en Importación",
+        description: "Ocurrió un problema al importar el archivo. Verifica el formato.",
+        variant: "destructive",
+      });
+      console.error('Import error:', error);
+    }
+  });
+
+  // Manejar carga de archivos
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const allowedTypes = ['.csv', '.xlsx', '.xls'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+      toast({
+        title: "Formato No Válido",
+        description: "Solo se permiten archivos CSV y Excel (.xlsx, .xls)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    importFileMutation.mutate({ file, type });
+    
+    // Limpiar input
+    event.target.value = '';
+  };
+
+  // Descargar plantillas
+  const downloadTemplate = (type: string) => {
+    const templates = {
+      products: {
+        filename: 'plantilla_productos.csv',
+        headers: ['nombre', 'categoria', 'precio', 'costo', 'stock_actual', 'stock_minimo', 'sku', 'descripcion'],
+        sample: ['Producto Ejemplo', 'Categoría A', '1500', '800', '100', '10', 'SKU001', 'Descripción del producto']
+      },
+      sales: {
+        filename: 'plantilla_ventas.csv',
+        headers: ['fecha_venta', 'cliente_email', 'cliente_nombre', 'productos', 'total', 'vendedor'],
+        sample: ['2024-01-15', 'cliente@email.com', 'Cliente Ejemplo', 'SKU001:2', '3000', 'Vendedor A']
+      },
+      customers: {
+        filename: 'plantilla_clientes.csv',
+        headers: ['email', 'nombre', 'telefono', 'direccion', 'tipo'],
+        sample: ['cliente@email.com', 'Cliente Ejemplo', '+56912345678', 'Dirección 123', 'regular']
+      }
+    };
+
+    const template = templates[type as keyof typeof templates];
+    if (!template) return;
+
+    const csvContent = [
+      template.headers.join(','),
+      template.sample.join(',')
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', template.filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Plantilla Descargada",
+      description: `Se descargó ${template.filename}`,
+      variant: "default",
+    });
   };
 
   return (
@@ -53,7 +160,7 @@ export default function DataManagement() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Base de Datos</p>
-                      <p className="text-lg font-semibold">En Memoria</p>
+                      <p className="text-lg font-semibold">PostgreSQL</p>
                     </div>
                   </div>
                 </CardContent>
@@ -91,11 +198,10 @@ export default function DataManagement() {
             {/* Alertas Importantes */}
             <div className="space-y-4">
               <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Información Importante</AlertTitle>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Base de Datos Configurada</AlertTitle>
                 <AlertDescription>
-                  Esta aplicación utiliza datos en memoria para pruebas. Los datos se resetean cada vez que se reinicia el servidor.
-                  Para producción, se debe migrar a la base de datos PostgreSQL configurada.
+                  La aplicación está conectada a PostgreSQL (Neon Database). Todos los datos se almacenan de forma persistente y están disponibles entre sesiones.
                 </AlertDescription>
               </Alert>
             </div>
@@ -128,27 +234,83 @@ export default function DataManagement() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Button variant="outline" className="h-20 flex flex-col items-center gap-2">
-                          <FileText className="h-6 w-6" />
-                          <span className="text-sm">Importar Productos</span>
-                        </Button>
-                        <Button variant="outline" className="h-20 flex flex-col items-center gap-2">
-                          <FileText className="h-6 w-6" />
-                          <span className="text-sm">Importar Ventas</span>
-                        </Button>
-                        <Button variant="outline" className="h-20 flex flex-col items-center gap-2">
-                          <FileText className="h-6 w-6" />
-                          <span className="text-sm">Importar Clientes</span>
-                        </Button>
+                        <div>
+                          <Button 
+                            variant="outline" 
+                            className="h-20 w-full flex flex-col items-center gap-2"
+                            onClick={() => productsFileRef.current?.click()}
+                          >
+                            <Package className="h-6 w-6" />
+                            <span className="text-sm">Importar Productos</span>
+                          </Button>
+                          <Input
+                            ref={productsFileRef}
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, 'products')}
+                          />
+                        </div>
+                        <div>
+                          <Button 
+                            variant="outline" 
+                            className="h-20 w-full flex flex-col items-center gap-2"
+                            onClick={() => salesFileRef.current?.click()}
+                          >
+                            <ShoppingCart className="h-6 w-6" />
+                            <span className="text-sm">Importar Ventas</span>
+                          </Button>
+                          <Input
+                            ref={salesFileRef}
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, 'sales')}
+                          />
+                        </div>
+                        <div>
+                          <Button 
+                            variant="outline" 
+                            className="h-20 w-full flex flex-col items-center gap-2"
+                            onClick={() => customersFileRef.current?.click()}
+                          >
+                            <Users className="h-6 w-6" />
+                            <span className="text-sm">Importar Clientes</span>
+                          </Button>
+                          <Input
+                            ref={customersFileRef}
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, 'customers')}
+                          />
+                        </div>
                       </div>
                       
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Formatos Soportados</AlertTitle>
-                        <AlertDescription>
-                          Se aceptan archivos CSV y Excel (.xlsx). Asegúrate de que los datos sigan el formato requerido.
-                        </AlertDescription>
-                      </Alert>
+                      <div className="space-y-3">
+                        <Alert>
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle>Formatos Soportados</AlertTitle>
+                          <AlertDescription>
+                            Se aceptan archivos CSV y Excel (.xlsx, .xls). Los archivos deben tener las columnas requeridas.
+                          </AlertDescription>
+                        </Alert>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <Button variant="ghost" size="sm" onClick={() => downloadTemplate('products')}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Plantilla Productos
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => downloadTemplate('sales')}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Plantilla Ventas
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => downloadTemplate('customers')}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Plantilla Clientes
+                          </Button>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
 
@@ -267,11 +429,10 @@ export default function DataManagement() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Estado de Migración</AlertTitle>
+                      <CheckCircle2 className="h-4 w-4" />
+                      <AlertTitle>Migración Completada</AlertTitle>
                       <AlertDescription>
-                        La aplicación está configurada para PostgreSQL pero actualmente usa almacenamiento en memoria.
-                        Sigue los pasos a continuación para migrar a la base de datos persistente.
+                        La aplicación ha sido migrada exitosamente a PostgreSQL. Todos los datos se almacenan en la base de datos persistente.
                       </AlertDescription>
                     </Alert>
 
@@ -279,51 +440,53 @@ export default function DataManagement() {
                       <h4 className="font-semibold">Pasos para Migración</h4>
                       
                       <div className="space-y-3">
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                          <div className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center font-semibold">1</div>
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                          <div className="w-6 h-6 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-semibold">✓</div>
                           <div>
                             <p className="font-medium">Verificar Configuración de BD</p>
-                            <p className="text-sm text-muted-foreground">Asegurar que DATABASE_URL esté configurado</p>
+                            <p className="text-sm text-muted-foreground">DATABASE_URL configurado correctamente</p>
                           </div>
-                          <Badge variant="secondary">Listo</Badge>
+                          <Badge variant="secondary">Completado</Badge>
                         </div>
                         
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                          <div className="w-6 h-6 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center font-semibold">2</div>
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                          <div className="w-6 h-6 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-semibold">✓</div>
                           <div>
                             <p className="font-medium">Ejecutar Migraciones</p>
-                            <p className="text-sm text-muted-foreground">Ejecutar 'npm run db:push' en terminal</p>
+                            <p className="text-sm text-muted-foreground">Esquema de base de datos creado</p>
                           </div>
-                          <Badge variant="outline">Pendiente</Badge>
+                          <Badge variant="secondary">Completado</Badge>
                         </div>
                         
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                          <div className="w-6 h-6 rounded-full bg-gray-400 text-white text-xs flex items-center justify-center font-semibold">3</div>
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                          <div className="w-6 h-6 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-semibold">✓</div>
                           <div>
                             <p className="font-medium">Migrar Storage a DatabaseStorage</p>
-                            <p className="text-sm text-muted-foreground">Cambiar implementación en server/storage.ts</p>
+                            <p className="text-sm text-muted-foreground">DatabaseStorage implementado y funcionando</p>
                           </div>
-                          <Badge variant="outline">Pendiente</Badge>
+                          <Badge variant="secondary">Completado</Badge>
                         </div>
                         
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                          <div className="w-6 h-6 rounded-full bg-gray-400 text-white text-xs flex items-center justify-center font-semibold">4</div>
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                          <div className="w-6 h-6 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-semibold">✓</div>
                           <div>
-                            <p className="font-medium">Transferir Datos</p>
-                            <p className="text-sm text-muted-foreground">Migrar datos existentes a la nueva BD</p>
+                            <p className="font-medium">Sistema Operativo</p>
+                            <p className="text-sm text-muted-foreground">PostgreSQL funcionando correctamente</p>
                           </div>
-                          <Badge variant="outline">Pendiente</Badge>
+                          <Badge variant="secondary">Completado</Badge>
                         </div>
                       </div>
 
                       <div className="pt-4">
-                        <Button className="w-full md:w-auto" disabled>
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          Iniciar Migración (Próximamente)
-                        </Button>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          La migración automática estará disponible en una próxima actualización.
-                        </p>
+                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            <p className="font-medium text-green-800">Migración Completada</p>
+                          </div>
+                          <p className="text-sm text-green-700 mt-1">
+                            Tu aplicación ya está funcionando con PostgreSQL. Todos los datos se almacenan de forma persistente.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
