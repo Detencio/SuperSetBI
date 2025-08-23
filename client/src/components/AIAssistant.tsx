@@ -1,0 +1,388 @@
+import { useState, useRef, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Bot, User, Send, Sparkles, BarChart3, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+interface AIInsight {
+  type: 'opportunity' | 'warning' | 'prediction' | 'recommendation';
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  category: 'inventory' | 'sales' | 'collections' | 'general';
+  confidence: number;
+}
+
+interface BusinessAnalysis {
+  summary: string;
+  insights: AIInsight[];
+  recommendations: string[];
+}
+
+const priorityColors = {
+  low: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  high: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  critical: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+};
+
+const typeIcons = {
+  opportunity: '🎯',
+  warning: '⚠️',
+  prediction: '🔮',
+  recommendation: '💡'
+};
+
+export default function AIAssistant() {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [analysis, setAnalysis] = useState<BusinessAnalysis | null>(null);
+  const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'chat' | 'analysis'>('chat');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: inputMessage.trim(),
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage.content,
+          conversationHistory: messages.slice(-5) // Últimos 5 mensajes para contexto
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error en la respuesta del servidor');
+      }
+
+      const data = await response.json();
+      
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo enviar el mensaje. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const generateAnalysis = async () => {
+    setIsAnalysisLoading(true);
+    try {
+      const response = await fetch('/api/ai/analysis');
+      if (!response.ok) {
+        throw new Error('Error generando análisis');
+      }
+      const data = await response.json();
+      setAnalysis(data);
+    } catch (error) {
+      console.error('Error generating analysis:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar el análisis. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalysisLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const startConversation = () => {
+    const welcomeMessage: ChatMessage = {
+      role: 'assistant',
+      content: '¡Hola! Soy tu asistente de inteligencia de negocios. Puedo ayudarte a analizar tus datos, responder preguntas sobre tu negocio y darte recomendaciones estratégicas. ¿En qué puedo ayudarte hoy?',
+      timestamp: new Date()
+    };
+    setMessages([welcomeMessage]);
+  };
+
+  return (
+    <Card className="h-[600px] flex flex-col">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Bot className="h-6 w-6 text-superset-blue" />
+            <CardTitle className="text-xl font-semibold">
+              Asistente IA
+            </CardTitle>
+            <Badge variant="secondary" className="bg-superset-blue text-white text-xs">
+              Powered by Gemini
+            </Badge>
+          </div>
+          <div className="flex space-x-2">
+            <Button
+              variant={activeTab === 'chat' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTab('chat')}
+              data-testid="tab-chat"
+            >
+              Chat
+            </Button>
+            <Button
+              variant={activeTab === 'analysis' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTab('analysis')}
+              data-testid="tab-analysis"
+            >
+              <BarChart3 className="h-4 w-4 mr-1" />
+              Análisis
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="flex-1 flex flex-col">
+        {activeTab === 'chat' ? (
+          <>
+            <ScrollArea className="flex-1 pr-4 mb-4">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <Bot className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">¡Comienza a conversar!</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Pregúntame sobre tus ventas, inventario, cobranzas o cualquier aspecto de tu negocio.
+                  </p>
+                  <Button onClick={startConversation} data-testid="button-start-chat">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Iniciar Conversación
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((message, index) => (
+                    <div
+                      key={index}
+                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`flex max-w-[80%] ${
+                          message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                        }`}
+                      >
+                        <div
+                          className={`flex-shrink-0 ${
+                            message.role === 'user' ? 'ml-2' : 'mr-2'
+                          }`}
+                        >
+                          {message.role === 'user' ? (
+                            <div className="bg-superset-blue text-white rounded-full p-2">
+                              <User className="h-4 w-4" />
+                            </div>
+                          ) : (
+                            <div className="bg-gray-200 dark:bg-gray-700 rounded-full p-2">
+                              <Bot className="h-4 w-4" />
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className={`rounded-lg p-3 ${
+                            message.role === 'user'
+                              ? 'bg-superset-blue text-white'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                          }`}
+                        >
+                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <p className="text-xs mt-1 opacity-70">
+                            {message.timestamp.toLocaleTimeString('es-ES', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="flex mr-2">
+                        <div className="bg-gray-200 dark:bg-gray-700 rounded-full p-2">
+                          <Bot className="h-4 w-4" />
+                        </div>
+                      </div>
+                      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
+                        <div className="flex items-center space-x-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm">Pensando...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </ScrollArea>
+            
+            <div className="flex space-x-2">
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Escribe tu pregunta aquí..."
+                disabled={isLoading}
+                data-testid="input-chat-message"
+                className="flex-1"
+              />
+              <Button 
+                onClick={sendMessage} 
+                disabled={isLoading || !inputMessage.trim()}
+                data-testid="button-send-message"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1">
+            {!analysis ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">Análisis Inteligente</h3>
+                <p className="text-muted-foreground mb-4">
+                  Genera un análisis completo de tu negocio con insights y recomendaciones personalizadas.
+                </p>
+                <Button 
+                  onClick={generateAnalysis} 
+                  disabled={isAnalysisLoading}
+                  data-testid="button-generate-analysis"
+                >
+                  {isAnalysisLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generar Análisis
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <ScrollArea className="h-full">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Resumen Ejecutivo</h3>
+                    <p className="text-muted-foreground">{analysis.summary}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Insights Clave</h3>
+                    <div className="space-y-3">
+                      {analysis.insights.map((insight, index) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg">{typeIcons[insight.type]}</span>
+                              <h4 className="font-medium">{insight.title}</h4>
+                            </div>
+                            <Badge className={priorityColors[insight.priority]}>
+                              {insight.priority}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">{insight.message}</p>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Categoría: {insight.category}</span>
+                            <span>Confianza: {Math.round(insight.confidence * 100)}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Recomendaciones</h3>
+                    <div className="space-y-2">
+                      {analysis.recommendations.map((recommendation, index) => (
+                        <div key={index} className="flex items-start space-x-2">
+                          <span className="text-superset-blue font-semibold">{index + 1}.</span>
+                          <p className="text-sm">{recommendation}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <Button 
+                      onClick={generateAnalysis} 
+                      variant="outline"
+                      disabled={isAnalysisLoading}
+                      data-testid="button-refresh-analysis"
+                    >
+                      {isAnalysisLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Actualizando...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Actualizar Análisis
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </ScrollArea>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

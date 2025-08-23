@@ -6,6 +6,7 @@ import {
   TrendingUp, 
   Database,
   Building2,
+  Bot,
   Settings, 
   Users, 
   LogOut,
@@ -23,6 +24,7 @@ const modules = [
   { name: "Control de Inventario", href: "/inventory", icon: Package },
   { name: "Gestión de Cobranza", href: "/collections", icon: CreditCard },
   { name: "Seguimiento de Ventas", href: "/sales", icon: TrendingUp },
+  { name: "Asistente IA", href: "/ai-assistant", icon: Bot },
   { name: "Gestión de Datos", href: "/data-management", icon: Database },
 ];
 

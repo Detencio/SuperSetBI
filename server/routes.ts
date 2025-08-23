@@ -9,14 +9,15 @@ import {
   generateCollections, 
   generateInventoryAlerts 
 } from "./mock-data-generator";
+import { aiService } from "./ai-service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard Analytics
   app.get("/api/dashboard/analytics", async (req, res) => {
     try {
-      const products = await storage.getProducts();
-      const sales = await storage.getSales();
-      const collections = await storage.getCollections();
+      const products = await storage.getProducts('demo-company-123');
+      const sales = await storage.getSales('demo-company-123');
+      const collections = await storage.getCollections('demo-company-123');
 
       // Calculate KPIs
       const totalRevenue = sales.reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0);
@@ -46,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Inventory distribution
       const categoryStats = products.reduce((acc, product) => {
-        acc[product.category] = (acc[product.category] || 0) + product.stock;
+        acc[product.categoryId || 'Sin categoría'] = (acc[product.categoryId || 'Sin categoría'] || 0) + product.stock;
         return acc;
       }, {} as Record<string, number>);
 
@@ -100,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Products API
   app.get("/api/products", async (req, res) => {
     try {
-      const products = await storage.getProducts();
+      const products = await storage.getProducts('demo-company-123');
       res.json(products);
     } catch (error) {
       res.status(500).json({ message: "Error fetching products" });
@@ -119,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sales API
   app.get("/api/sales", async (req, res) => {
     try {
-      const sales = await storage.getSales();
+      const sales = await storage.getSales('demo-company-123');
       res.json(sales);
     } catch (error) {
       res.status(500).json({ message: "Error fetching sales" });
@@ -362,6 +363,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         error: "Error interno del servidor"
       });
+    }
+  });
+
+  // AI Assistant Endpoints
+  app.get("/api/ai/analysis", async (req, res) => {
+    try {
+      const companyId = 'demo-company-123'; // Por ahora usamos la empresa demo
+      const analysis = await aiService.analyzeBusinessData(companyId);
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error generating AI analysis:", error);
+      res.status(500).json({ error: "Error generando análisis IA" });
+    }
+  });
+
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      const { message, conversationHistory = [] } = req.body;
+      const companyId = 'demo-company-123'; // Por ahora usamos la empresa demo
+      
+      if (!message) {
+        return res.status(400).json({ error: "Mensaje requerido" });
+      }
+
+      const response = await aiService.chatWithAssistant(message, companyId, conversationHistory);
+      res.json({ response });
+    } catch (error) {
+      console.error("Error in AI chat:", error);
+      res.status(500).json({ error: "Error en el chat del asistente IA" });
+    }
+  });
+
+  app.get("/api/ai/inventory-insights", async (req, res) => {
+    try {
+      const companyId = 'demo-company-123'; // Por ahora usamos la empresa demo
+      const insights = await aiService.generateInventoryRecommendations(companyId);
+      res.json(insights);
+    } catch (error) {
+      console.error("Error generating inventory insights:", error);
+      res.status(500).json({ error: "Error generando insights de inventario" });
     }
   });
 

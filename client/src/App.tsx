@@ -9,6 +9,7 @@ import Collections from "@/pages/collections";
 import Sales from "@/pages/sales";
 import DataManagement from "@/pages/data-management";
 import CompanyManagement from "@/pages/company-management";
+import AIAssistantPage from "@/pages/ai-assistant";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/sales" component={Sales} />
       <Route path="/data-management" component={DataManagement} />
       <Route path="/company-management" component={CompanyManagement} />
+      <Route path="/ai-assistant" component={AIAssistantPage} />
       <Route component={NotFound} />
     </Switch>
   );
