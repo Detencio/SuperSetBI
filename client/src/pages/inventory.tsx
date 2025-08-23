@@ -85,7 +85,7 @@ export default function Inventory() {
   const finalFilteredProducts = advancedFilteredProducts.length > 0 ? advancedFilteredProducts : legacyFilteredProducts;
   
   // Generar configuraciones de filtro dinámicamente
-  const filterConfigs = generateDynamicFilterConfigs(products || [], INVENTORY_FILTER_CONFIGS);
+  const filterConfigs = generateDynamicFilterConfigs(Array.isArray(products) ? products : [], INVENTORY_FILTER_CONFIGS);
 
   // Get unique categories
   const categories = Array.from(new Set(Array.isArray(products) ? products.map((p: any) => p.category) : []));
@@ -195,7 +195,7 @@ export default function Inventory() {
           {/* Advanced Filters */}
           <div className="mt-6">
             <AdvancedFilters
-              data={products || []}
+              data={Array.isArray(products) ? products : []}
               onFilteredDataChange={setAdvancedFilteredProducts}
               filterConfigs={filterConfigs}
               module="inventory"
@@ -258,7 +258,7 @@ export default function Inventory() {
 
               {/* Alerts Tab */}
               <TabsContent value="alerts">
-                <InventoryAlerts alerts={inventoryAlerts || []} isLoading={alertsLoading} />
+                <InventoryAlerts alerts={Array.isArray(inventoryAlerts) ? inventoryAlerts : []} isLoading={alertsLoading} />
               </TabsContent>
 
               {/* Analytics Tab */}

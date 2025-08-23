@@ -43,6 +43,7 @@ import {
 } from "recharts";
 import { useCurrency } from "@/lib/currency-utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import InventoryPDFReport from "./inventory-pdf-report";
 
 interface InventoryExecutiveDashboardProps {
   products: any[];
@@ -361,7 +362,7 @@ export default function InventoryExecutiveDashboard({
 
       {/* Gráficos y Análisis Detallado */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Resumen
@@ -377,6 +378,10 @@ export default function InventoryExecutiveDashboard({
           <TabsTrigger value="abc" className="flex items-center gap-2">
             <Target className="h-4 w-4" />
             Análisis ABC
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Reportes PDF
           </TabsTrigger>
         </TabsList>
 
@@ -422,7 +427,7 @@ export default function InventoryExecutiveDashboard({
                     <YAxis />
                     <Tooltip 
                       formatter={(value, name) => [
-                        name === 'value' ? formatDisplayCurrency(value) : value,
+                        name === 'value' ? formatDisplayCurrency(value as number) : value,
                         name === 'value' ? 'Valor' : name === 'stock' ? 'Stock' : 'Alertas'
                       ]}
                     />
@@ -447,7 +452,7 @@ export default function InventoryExecutiveDashboard({
                       <div className={`w-12 h-12 ${metric.bgColor} rounded-lg flex items-center justify-center`}>
                         <IconComponent className={`h-6 w-6 ${metric.color}`} />
                       </div>
-                      <Badge variant={isOnTarget ? "success" : "warning"}>
+                      <Badge variant={isOnTarget ? "default" : "secondary"}>
                         {isOnTarget ? "En objetivo" : "Fuera de objetivo"}
                       </Badge>
                     </div>
@@ -491,7 +496,7 @@ export default function InventoryExecutiveDashboard({
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => formatDisplayCurrency(value)} />
+                    <Tooltip formatter={(value) => formatDisplayCurrency(value as number)} />
                   </RechartsPieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -692,6 +697,60 @@ export default function InventoryExecutiveDashboard({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Reportes Tab */}
+        <TabsContent value="reports" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* PDF Report */}
+            <InventoryPDFReport 
+              products={products}
+              kpis={kpis}
+              alerts={[]} // We'll get alerts from parent if needed
+              analytics={kpis}
+            />
+            
+            {/* Additional Export Options */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Exportaciones Adicionales
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm text-muted-foreground mb-4">
+                  <p>Opciones adicionales de exportación:</p>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="font-medium">Reporte de Stock Crítico</p>
+                      <p className="text-sm text-muted-foreground">Solo productos con alertas</p>
+                    </div>
+                    <Badge variant="outline">Próximamente</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="font-medium">Análisis de Rotación</p>
+                      <p className="text-sm text-muted-foreground">Productos de mayor/menor rotación</p>
+                    </div>
+                    <Badge variant="outline">Próximamente</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="font-medium">Valorización de Inventario</p>
+                      <p className="text-sm text-muted-foreground">Reporte contable completo</p>
+                    </div>
+                    <Badge variant="outline">Próximamente</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
