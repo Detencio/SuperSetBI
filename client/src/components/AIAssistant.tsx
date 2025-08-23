@@ -150,14 +150,15 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
   // Procesar preguntas rápidas
   useEffect(() => {
     if (quickPrompt && quickPrompt.trim()) {
+      setInputMessage(quickPrompt);
       setActiveTab('chat');
-      // Enviar automáticamente la pregunta rápida
+      // Enviar automáticamente la pregunta rápida después de mostrarla
       setTimeout(() => {
         sendMessage(quickPrompt);
         if (onQuickPromptProcessed) {
           onQuickPromptProcessed();
         }
-      }, 100);
+      }, 500);
     }
   }, [quickPrompt]);
 
