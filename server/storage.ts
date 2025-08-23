@@ -19,13 +19,15 @@ import {
   type Payment, type InsertPayment,
   type CollectionActivity, type InsertCollectionActivity,
   type DataImport, type InsertDataImport,
+  type ChatConversation, type InsertChatConversation,
+  type ChatMessage, type InsertChatMessage,
   companies, companyInvitations, users, dashboards, categories, suppliers, warehouses, products, 
   inventoryMovements, stockAlerts, sales, collections, customers, salespeople, enhancedSales, 
-  saleItems, accountsReceivable, payments, collectionActivities, dataImports
+  saleItems, accountsReceivable, payments, collectionActivities, dataImports, chatConversations, chatMessages
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { eq, and, gte, lte, lt, gt, desc, asc } from "drizzle-orm";
+import { eq, and, gte, lte, lt, gt, desc, asc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Companies
@@ -162,6 +164,15 @@ export interface IStorage {
   getDataImport(id: string): Promise<DataImport | undefined>;
   createDataImport(importData: InsertDataImport): Promise<DataImport>;
   updateDataImport(id: string, importData: Partial<DataImport>): Promise<DataImport | undefined>;
+
+  // AI Chat System
+  getChatConversations(companyId: string, userId: string): Promise<ChatConversation[]>;
+  getChatConversation(conversationId: string, companyId: string): Promise<ChatConversation | undefined>;
+  createChatConversation(conversation: InsertChatConversation): Promise<ChatConversation>;
+  updateChatConversation(conversationId: string, updates: Partial<InsertChatConversation>): Promise<ChatConversation | undefined>;
+  getChatMessages(conversationId: string): Promise<ChatMessage[]>;
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  deleteChatConversation(conversationId: string, companyId: string): Promise<void>;
   
   // Analytics methods
   getInventoryAnalytics(companyId: string): Promise<any>;
@@ -857,8 +868,73 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // AI Chat methods
+  async getChatConversations(companyId: string, userId: string): Promise<ChatConversation[]> {
+    return await db.select().from(chatConversations)
+      .where(and(
+        eq(chatConversations.companyId, companyId),
+        eq(chatConversations.userId, userId)
+      ))
+      .orderBy(desc(chatConversations.lastMessageAt));
+  }
+
+  async getChatConversation(conversationId: string, companyId: string): Promise<ChatConversation | undefined> {
+    const [conversation] = await db.select().from(chatConversations)
+      .where(and(
+        eq(chatConversations.id, conversationId),
+        eq(chatConversations.companyId, companyId)
+      ));
+    return conversation;
+  }
+
+  async createChatConversation(conversation: InsertChatConversation): Promise<ChatConversation> {
+    const [created] = await db.insert(chatConversations).values(conversation).returning();
+    return created;
+  }
+
+  async updateChatConversation(conversationId: string, updates: Partial<InsertChatConversation>): Promise<ChatConversation | undefined> {
+    const [updated] = await db.update(chatConversations)
+      .set({...updates, lastMessageAt: new Date()})
+      .where(eq(chatConversations.id, conversationId))
+      .returning();
+    return updated;
+  }
+
+  async getChatMessages(conversationId: string): Promise<ChatMessage[]> {
+    return await db.select().from(chatMessages)
+      .where(eq(chatMessages.conversationId, conversationId))
+      .orderBy(asc(chatMessages.timestamp));
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const [created] = await db.insert(chatMessages).values(message).returning();
+    
+    // Update conversation message count and last message time
+    await db.update(chatConversations)
+      .set({
+        messageCount: sql`${chatConversations.messageCount} + 1`,
+        lastMessageAt: new Date()
+      })
+      .where(eq(chatConversations.id, message.conversationId));
+    
+    return created;
+  }
+
+  async deleteChatConversation(conversationId: string, companyId: string): Promise<void> {
+    // Delete messages first
+    await db.delete(chatMessages).where(eq(chatMessages.conversationId, conversationId));
+    // Then delete conversation
+    await db.delete(chatConversations)
+      .where(and(
+        eq(chatConversations.id, conversationId),
+        eq(chatConversations.companyId, companyId)
+      ));
+  }
+
   async clearAllData(): Promise<void> {
     // Clear all data for testing purposes
+    await db.delete(chatMessages);
+    await db.delete(chatConversations);
     await db.delete(dataImports);
     await db.delete(collectionActivities);
     await db.delete(payments);

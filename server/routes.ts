@@ -379,17 +379,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat Conversations endpoints
+  app.get("/api/chat/conversations", async (req, res) => {
+    try {
+      const companyId = 'demo-company-123';
+      const userId = 'user-demo-123';
+      
+      const conversations = await storage.getChatConversations(companyId, userId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error getting conversations:", error);
+      res.status(500).json({ error: "Error al obtener las conversaciones" });
+    }
+  });
+
+  app.get("/api/chat/conversations/:id/messages", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const companyId = 'demo-company-123';
+      
+      // Verificar que la conversación pertenece a la empresa
+      const conversation = await storage.getChatConversation(id, companyId);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversación no encontrada" });
+      }
+      
+      const messages = await storage.getChatMessages(id);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error getting messages:", error);
+      res.status(500).json({ error: "Error al obtener los mensajes" });
+    }
+  });
+
+  app.post("/api/chat/conversations", async (req, res) => {
+    try {
+      const { title } = req.body;
+      const companyId = 'demo-company-123';
+      const userId = 'user-demo-123';
+      
+      const conversation = await storage.createChatConversation({
+        companyId,
+        userId,
+        title: title || 'Nueva conversación',
+        messageCount: 0
+      });
+      
+      res.json(conversation);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      res.status(500).json({ error: "Error al crear la conversación" });
+    }
+  });
+
+  app.delete("/api/chat/conversations/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const companyId = 'demo-company-123';
+      
+      await storage.deleteChatConversation(id, companyId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      res.status(500).json({ error: "Error al eliminar la conversación" });
+    }
+  });
+
   app.post("/api/ai/chat", async (req, res) => {
     try {
-      const { message, conversationHistory = [] } = req.body;
-      const companyId = 'demo-company-123'; // Por ahora usamos la empresa demo
+      const { message, conversationId, createNewConversation = false } = req.body;
+      const companyId = 'demo-company-123';
+      const userId = 'user-demo-123';
       
       if (!message) {
         return res.status(400).json({ error: "Mensaje requerido" });
       }
 
+      let currentConversationId = conversationId;
+      
+      // Crear nueva conversación si se solicita o no existe una
+      if (createNewConversation || !conversationId) {
+        const title = message.length > 50 ? message.substring(0, 50) + '...' : message;
+        const newConversation = await storage.createChatConversation({
+          companyId,
+          userId,
+          title,
+          messageCount: 0
+        });
+        currentConversationId = newConversation.id;
+      }
+      
+      // Obtener historial de la conversación
+      const conversationHistory = conversationId ? await storage.getChatMessages(conversationId) : [];
+      
+      // Guardar mensaje del usuario
+      await storage.createChatMessage({
+        conversationId: currentConversationId,
+        role: 'user',
+        content: message,
+        tokenCount: message.split(' ').length // Estimación simple de tokens
+      });
+      
+      // Generar respuesta de la IA
       const response = await aiService.chatWithAssistant(message, companyId, conversationHistory);
-      res.json({ response });
+      
+      // Guardar respuesta del asistente
+      await storage.createChatMessage({
+        conversationId: currentConversationId,
+        role: 'assistant',
+        content: response,
+        tokenCount: response.split(' ').length // Estimación simple de tokens
+      });
+      
+      res.json({ 
+        response, 
+        conversationId: currentConversationId,
+        messageCount: conversationHistory.length + 2 // +2 por el mensaje del usuario y la respuesta
+      });
     } catch (error) {
       console.error("Error in AI chat:", error);
       res.status(500).json({ error: "Error en el chat del asistente IA" });

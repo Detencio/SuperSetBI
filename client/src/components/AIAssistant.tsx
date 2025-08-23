@@ -4,13 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Bot, User, Send, Sparkles, BarChart3, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Bot, User, Send, Sparkles, BarChart3, Loader2, History, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ChatMessage {
+  id?: string;
+  conversationId?: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  tokenCount?: number;
+}
+
+interface ChatConversation {
+  id: string;
+  title: string;
+  lastMessageAt: string;
+  messageCount: number;
+  createdAt: string;
 }
 
 interface AIInsight {
@@ -170,17 +184,21 @@ const FormattedMessage = ({ content }: { content: string }) => {
       
       // Párrafo normal con mejor estilo
       return (
-        <div key={`paragraph-${sectionIndex}`} className="mb-4 p-3 leading-relaxed text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          {processAdvancedMarkdown(trimmedSection)}
+        <div key={`paragraph-${sectionIndex}`} className="mb-4 p-3 leading-relaxed text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg break-words">
+          <div className="overflow-wrap-anywhere word-break-break-word max-w-full">
+            {processAdvancedMarkdown(trimmedSection)}
+          </div>
         </div>
       );
     }).filter(Boolean);
   };
   
   return (
-    <div className="space-y-4 max-w-full">
-      <div className="prose prose-sm max-w-none dark:prose-invert">
-        {formatAdvancedText(content)}
+    <div className="space-y-4 max-w-full overflow-hidden">
+      <div className="prose prose-sm max-w-none dark:prose-invert break-words">
+        <div className="overflow-wrap-anywhere word-break-break-word">
+          {formatAdvancedText(content)}
+        </div>
       </div>
     </div>
   );
@@ -193,8 +211,89 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
   const [analysis, setAnalysis] = useState<BusinessAnalysis | null>(null);
   const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'analysis'>('chat');
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [showConversationHistory, setShowConversationHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Obtener conversaciones
+  const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
+    queryKey: ['/api/chat/conversations'],
+    queryFn: () => fetch('/api/chat/conversations').then(res => res.json()),
+  });
+
+  // Cargar mensajes de conversación seleccionada
+  useEffect(() => {
+    if (selectedConversationId) {
+      fetch(`/api/chat/conversations/${selectedConversationId}/messages`)
+        .then(res => res.json())
+        .then(data => {
+          const formattedMessages = data.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          setMessages(formattedMessages);
+        })
+        .catch(error => {
+          console.error('Error loading messages:', error);
+          toast({
+            title: "Error",
+            description: "No se pudieron cargar los mensajes.",
+            variant: "destructive",
+          });
+        });
+    }
+  }, [selectedConversationId]);
+
+  // Crear nueva conversación
+  const createConversationMutation = useMutation({
+    mutationFn: (title: string) => apiRequest('/api/chat/conversations', {
+      method: 'POST',
+      body: { title }
+    }),
+    onSuccess: (newConversation) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
+      setSelectedConversationId(newConversation.id);
+      setMessages([]);
+      toast({
+        title: "Nueva conversación creada",
+        description: "Puedes comenzar a chatear ahora.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo crear la conversación.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Eliminar conversación
+  const deleteConversationMutation = useMutation({
+    mutationFn: (conversationId: string) => apiRequest(`/api/chat/conversations/${conversationId}`, {
+      method: 'DELETE'
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
+      if (selectedConversationId) {
+        setSelectedConversationId(null);
+        setMessages([]);
+      }
+      toast({
+        title: "Conversación eliminada",
+        description: "La conversación se eliminó correctamente.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la conversación.",
+        variant: "destructive",
+      });
+    }
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -227,6 +326,14 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
     const message = messageToSend || inputMessage.trim();
     if (!message || isLoading) return;
 
+    // Si no hay conversación seleccionada, crear una nueva
+    if (!selectedConversationId) {
+      const title = message.length > 50 ? message.substring(0, 50) + '...' : message;
+      createConversationMutation.mutate(title);
+      // El mensaje se enviará cuando la conversación se cree
+      return;
+    }
+
     const userMessage: ChatMessage = {
       role: 'user',
       content: message,
@@ -234,7 +341,6 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
     };
 
     setMessages(prev => [...prev, userMessage]);
-    // Solo limpiar si no es una pregunta rápida o después de mostrarla
     if (!messageToSend) {
       setInputMessage('');
     }
@@ -248,7 +354,7 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
         },
         body: JSON.stringify({
           message: message,
-          conversationHistory: messages.slice(-5) // Últimos 5 mensajes para contexto
+          conversationId: selectedConversationId
         }),
       });
 
@@ -265,6 +371,10 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Actualizar la lista de conversaciones
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
+      
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -306,12 +416,27 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
   };
 
   const startConversation = () => {
-    const welcomeMessage: ChatMessage = {
-      role: 'assistant',
-      content: '¡Hola! Soy tu asistente de inteligencia de negocios. Puedo ayudarte a analizar tus datos, responder preguntas sobre tu negocio y darte recomendaciones estratégicas. ¿En qué puedo ayudarte hoy?',
-      timestamp: new Date()
-    };
-    setMessages([welcomeMessage]);
+    createConversationMutation.mutate('Nueva consulta');
+  };
+  
+  const loadConversation = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    setShowConversationHistory(false);
+  };
+  
+  const deleteConversation = (conversationId: string) => {
+    deleteConversationMutation.mutate(conversationId);
+  };
+  
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Hace unos minutos';
+    if (diffInHours < 24) return `Hace ${diffInHours} horas`;
+    if (diffInHours < 168) return `Hace ${Math.floor(diffInHours / 24)} días`;
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
   };
 
   return (
@@ -328,6 +453,15 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
             </Badge>
           </div>
           <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowConversationHistory(!showConversationHistory)}
+              data-testid="toggle-history"
+            >
+              <History className="h-4 w-4 mr-1" />
+              Historial
+            </Button>
             <Button
               variant={activeTab === 'chat' ? 'default' : 'outline'}
               size="sm"
@@ -347,6 +481,62 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
             </Button>
           </div>
         </div>
+        
+        {/* Panel de Historial de Conversaciones */}
+        {showConversationHistory && (
+          <div className="mt-4 border-t pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-sm">Conversaciones ({conversations.length})</h4>
+              <Button 
+                size="sm" 
+                onClick={startConversation}
+                disabled={createConversationMutation.isPending}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Nueva
+              </Button>
+            </div>
+            <ScrollArea className="h-32">
+              <div className="space-y-1">
+                {conversations.map((conversation: ChatConversation) => (
+                  <div 
+                    key={conversation.id} 
+                    className={`flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
+                      selectedConversationId === conversation.id ? 'bg-superset-blue/10 border border-superset-blue/20' : ''
+                    }`}
+                    onClick={() => loadConversation(conversation.id)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{conversation.title}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <span>{formatRelativeTime(conversation.lastMessageAt)}</span>
+                        <span>•</span>
+                        <span>{conversation.messageCount} mensajes</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteConversation(conversation.id);
+                      }}
+                      disabled={deleteConversationMutation.isPending}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+                {conversations.length === 0 && (
+                  <div className="text-center text-sm text-muted-foreground py-4">
+                    No hay conversaciones guardadas
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
       </CardHeader>
       
       <CardContent className="flex-1 flex flex-col">
@@ -408,16 +598,18 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                               </div>
                             </div>
                           )}
-                          <div className="p-5">
-                            <div className={`leading-relaxed overflow-wrap-anywhere ${
+                          <div className="p-5 max-w-full overflow-hidden">
+                            <div className={`leading-relaxed max-w-full break-words overflow-wrap-anywhere ${
                               message.role === 'assistant' ? 'text-sm' : 'text-sm whitespace-pre-wrap font-medium'
                             }`}>
                               {message.role === 'assistant' ? (
-                                <FormattedMessage content={message.content} />
+                                <div className="max-w-full overflow-hidden">
+                                  <FormattedMessage content={message.content} />
+                                </div>
                               ) : (
-                                <div className="flex items-start gap-2">
-                                  <span className="text-blue-200">💬</span>
-                                  <span>{message.content}</span>
+                                <div className="flex items-start gap-2 max-w-full">
+                                  <span className="text-blue-200 flex-shrink-0">💬</span>
+                                  <span className="break-words overflow-wrap-anywhere min-w-0 flex-1">{message.content}</span>
                                 </div>
                               )}
                             </div>

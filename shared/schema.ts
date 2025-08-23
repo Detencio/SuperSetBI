@@ -542,9 +542,60 @@ export const productRelations = relations(products, ({ one, many }) => ({
   inventoryMovements: many(inventoryMovements),
 }));
 
+// AI Chat System
+export const chatConversations = pgTable("chat_conversations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  title: text("title").notNull(), // Auto-generated from first message
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+  messageCount: integer("message_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull(),
+  role: text("role").notNull(), // 'user' | 'assistant'
+  content: text("content").notNull(),
+  timestamp: timestamp("timestamp").defaultNow(),
+  tokenCount: integer("token_count"), // Para tracking de consumo
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations for AI Chat
+export const chatConversationsRelations = relations(chatConversations, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [chatConversations.companyId],
+    references: [companies.id],
+  }),
+  user: one(users, {
+    fields: [chatConversations.userId],
+    references: [users.id],
+  }),
+  messages: many(chatMessages),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  conversation: one(chatConversations, {
+    fields: [chatMessages.conversationId],
+    references: [chatConversations.id],
+  }),
+}));
+
+// Chat schemas
+export const insertChatConversationSchema = createInsertSchema(chatConversations);
+export const insertChatMessageSchema = createInsertSchema(chatMessages);
+
 // Multi-tenancy types
 export type Company = typeof companies.$inferSelect;
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 
 export type CompanyInvitation = typeof companyInvitations.$inferSelect;
 export type InsertCompanyInvitation = z.infer<typeof insertCompanyInvitationSchema>;
+
+// AI Chat types
+export type ChatConversation = typeof chatConversations.$inferSelect;
+export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
