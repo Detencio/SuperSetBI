@@ -50,6 +50,24 @@ interface AIAssistantProps {
 
 // Componente para formatear mensajes del asistente
 const FormattedMessage = ({ content }: { content: string }) => {
+  // Función para procesar texto con markdown básico
+  const processMarkdown = (text: string) => {
+    // Procesar texto en negrita **texto**
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const boldText = part.slice(2, -2);
+        return (
+          <strong key={index} className="font-semibold text-gray-900 dark:text-gray-100">
+            {boldText}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
   // Función para formatear el texto con saltos de línea y listas
   const formatText = (text: string) => {
     // Dividir en párrafos
@@ -60,7 +78,7 @@ const FormattedMessage = ({ content }: { content: string }) => {
       if (!trimmedPart) return null;
       
       // Detectar listas (líneas que empiezan con -, *, •, números)
-      if (trimmedPart.includes('\n-') || trimmedPart.includes('\n*') || trimmedPart.includes('\n•') || /\n\d+\./.test(trimmedPart)) {
+      if (trimmedPart.includes('\n*') || trimmedPart.includes('\n-') || trimmedPart.includes('\n•') || /\n\d+\./.test(trimmedPart)) {
         const lines = trimmedPart.split('\n');
         const title = lines[0];
         const listItems = lines.slice(1).filter(line => line.trim());
@@ -68,16 +86,20 @@ const FormattedMessage = ({ content }: { content: string }) => {
         return (
           <div key={index} className="mb-4">
             {title && !title.match(/^[-*•\d]/) && (
-              <p className="font-medium mb-2">{title}</p>
+              <div className="font-medium mb-2 text-gray-900 dark:text-gray-100">
+                {processMarkdown(title)}
+              </div>
             )}
-            <ul className="space-y-1 ml-4">
+            <ul className="space-y-2 ml-4">
               {listItems.map((item, itemIndex) => {
                 const cleanItem = item.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '').trim();
                 if (!cleanItem) return null;
                 return (
                   <li key={itemIndex} className="flex items-start text-sm">
-                    <span className="text-superset-blue mr-2 flex-shrink-0">•</span>
-                    <span>{cleanItem}</span>
+                    <span className="text-superset-blue mr-3 flex-shrink-0 mt-1">•</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {processMarkdown(cleanItem)}
+                    </span>
                   </li>
                 );
               })}
@@ -87,19 +109,19 @@ const FormattedMessage = ({ content }: { content: string }) => {
       }
       
       // Detectar títulos o preguntas
-      if (trimmedPart.length < 100 && (trimmedPart.endsWith(':') || trimmedPart.endsWith('?'))) {
+      if (trimmedPart.length < 120 && (trimmedPart.endsWith(':') || trimmedPart.endsWith('?'))) {
         return (
-          <h4 key={index} className="font-semibold mb-2">
-            {trimmedPart}
+          <h4 key={index} className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
+            {processMarkdown(trimmedPart)}
           </h4>
         );
       }
       
       // Párrafo normal
       return (
-        <p key={index} className="mb-3 leading-relaxed">
-          {trimmedPart}
-        </p>
+        <div key={index} className="mb-3 leading-relaxed text-gray-700 dark:text-gray-300">
+          {processMarkdown(trimmedPart)}
+        </div>
       );
     }).filter(Boolean);
   };
