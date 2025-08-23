@@ -248,10 +248,10 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
 
   // Crear nueva conversación
   const createConversationMutation = useMutation({
-    mutationFn: (title: string) => apiRequest('/api/chat/conversations', {
-      method: 'POST',
-      body: { title }
-    }),
+    mutationFn: async (title: string) => {
+      const response = await apiRequest('POST', '/api/chat/conversations', { title });
+      return response.json();
+    },
     onSuccess: (newConversation) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
       setSelectedConversationId(newConversation.id);
@@ -272,9 +272,10 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
 
   // Eliminar conversación
   const deleteConversationMutation = useMutation({
-    mutationFn: (conversationId: string) => apiRequest(`/api/chat/conversations/${conversationId}`, {
-      method: 'DELETE'
-    }),
+    mutationFn: async (conversationId: string) => {
+      const response = await apiRequest('DELETE', `/api/chat/conversations/${conversationId}`);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
       if (selectedConversationId) {
