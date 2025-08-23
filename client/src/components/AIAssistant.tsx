@@ -84,20 +84,20 @@ const FormattedMessage = ({ content }: { content: string }) => {
         const listItems = lines.slice(1).filter(line => line.trim());
         
         return (
-          <div key={index} className="mb-4">
+          <div key={index} className="mb-4 max-w-full">
             {title && !title.match(/^[-*•\d]/) && (
-              <div className="font-medium mb-2 text-gray-900 dark:text-gray-100">
+              <div className="font-medium mb-2 text-gray-900 dark:text-gray-100 overflow-wrap-anywhere">
                 {processMarkdown(title)}
               </div>
             )}
-            <ul className="space-y-2 ml-4">
+            <ul className="space-y-2 ml-4 max-w-full">
               {listItems.map((item, itemIndex) => {
                 const cleanItem = item.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '').trim();
                 if (!cleanItem) return null;
                 return (
-                  <li key={itemIndex} className="flex items-start text-sm">
+                  <li key={itemIndex} className="flex items-start text-sm max-w-full">
                     <span className="text-superset-blue mr-3 flex-shrink-0 mt-1">•</span>
-                    <span className="text-gray-700 dark:text-gray-300">
+                    <span className="text-gray-700 dark:text-gray-300 overflow-wrap-anywhere flex-1 min-w-0">
                       {processMarkdown(cleanItem)}
                     </span>
                   </li>
@@ -119,14 +119,14 @@ const FormattedMessage = ({ content }: { content: string }) => {
       
       // Párrafo normal
       return (
-        <div key={index} className="mb-3 leading-relaxed text-gray-700 dark:text-gray-300">
+        <div key={index} className="mb-3 leading-relaxed text-gray-700 dark:text-gray-300 overflow-wrap-anywhere max-w-full">
           {processMarkdown(trimmedPart)}
         </div>
       );
     }).filter(Boolean);
   };
   
-  return <div className="space-y-2">{formatText(content)}</div>;
+  return <div className="space-y-2 max-w-full overflow-wrap-anywhere">{formatText(content)}</div>;
 };
 
 export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIAssistantProps = {}) {
@@ -156,10 +156,13 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
       // Enviar automáticamente la pregunta rápida después de mostrarla
       setTimeout(() => {
         sendMessage(quickPrompt);
-        if (onQuickPromptProcessed) {
-          onQuickPromptProcessed();
-        }
-      }, 1000); // Aumenté el tiempo para que se vea mejor
+        // Solo limpiar el input después de un delay adicional
+        setTimeout(() => {
+          if (onQuickPromptProcessed) {
+            onQuickPromptProcessed();
+          }
+        }, 500);
+      }, 1500); // Más tiempo para ver la pregunta
     }
   }, [quickPrompt]);
 
@@ -174,7 +177,10 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
+    // Solo limpiar si no es una pregunta rápida o después de mostrarla
+    if (!messageToSend) {
+      setInputMessage('');
+    }
     setIsLoading(true);
 
     try {
