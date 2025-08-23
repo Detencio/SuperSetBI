@@ -139,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Collections API
   app.get("/api/collections", async (req, res) => {
     try {
-      const collections = await storage.getCollections();
+      const collections = await storage.getCollections('demo-company-123');
       res.json(collections);
     } catch (error) {
       res.status(500).json({ message: "Error fetching collections" });
@@ -162,8 +162,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Advanced Inventory Analytics API
   app.get("/api/inventory/analytics", async (req, res) => {
     try {
-      const products = await storage.getProducts();
-      const sales = await storage.getSales();
+      const products = await storage.getProducts('demo-company-123');
+      const sales = await storage.getSales('demo-company-123');
       const movements: any[] = []; // TODO: Implement when movements are ready
       
       // Import the analytics utility at runtime to avoid circular dependencies
@@ -178,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/inventory/alerts", async (req, res) => {
     try {
-      const products = await storage.getProducts();
+      const products = await storage.getProducts('demo-company-123');
       const { InventoryAnalytics } = await import("./inventory-utils");
       const alerts = InventoryAnalytics.generateAlerts(products);
       
@@ -190,8 +190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/inventory/products-analysis", async (req, res) => {
     try {
-      const products = await storage.getProducts();
-      const sales = await storage.getSales();
+      const products = await storage.getProducts('demo-company-123');
+      const sales = await storage.getSales('demo-company-123');
       const movements: any[] = []; // TODO: Implement when movements are ready
       
       const { InventoryAnalytics } = await import("./inventory-utils");
@@ -322,24 +322,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint para obtener estadísticas de los datos actuales
   app.get("/api/data-statistics", async (req, res) => {
     try {
-      const products = await storage.getProducts();
-      const sales = await storage.getSales();
-      const collections = await storage.getCollections();
+      const products = await storage.getProducts('demo-company-123');
+      const sales = await storage.getSales('demo-company-123');
+      const collections = await storage.getCollections('demo-company-123');
       
       const stats = {
         products: {
           total: products.length,
-          categories: [...new Set(products.map(p => p.category))].length,
-          lowStock: products.filter(p => p.currentStock <= p.minStock).length,
-          outOfStock: products.filter(p => p.currentStock === 0).length,
-          totalValue: products.reduce((sum, p) => sum + (p.currentStock * p.unitCost), 0)
+          categories: [...new Set(products.map(p => p.categoryId).filter(Boolean))].length,
+          lowStock: products.filter(p => p.stock <= (p.minStock || 0)).length,
+          outOfStock: products.filter(p => p.stock === 0).length,
+          totalValue: products.reduce((sum, p) => sum + (p.stock * parseFloat(p.costPrice || '0')), 0)
         },
         sales: {
           total: sales.length,
           totalRevenue: sales.reduce((sum, s) => sum + (parseFloat(String(s.totalAmount || 0))), 0),
-          customers: [...new Set(sales.map(s => s.customerEmail))].length,
-          thisYear: sales.filter(s => new Date(s.saleDate).getFullYear() === 2024).length,
+          customers: [...new Set(sales.map(s => s.customerEmail).filter(Boolean))].length,
+          thisYear: sales.filter(s => s.saleDate && new Date(s.saleDate).getFullYear() === 2024).length,
           thisMonth: sales.filter(s => {
+            if (!s.saleDate) return false;
             const saleDate = new Date(s.saleDate);
             const now = new Date();
             return saleDate.getMonth() === now.getMonth() && 
@@ -352,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           overdue: collections.filter(c => c.status === 'overdue').length,
           paid: collections.filter(c => c.status === 'paid').length,
           totalAmount: collections.reduce((sum, c) => sum + (parseFloat(String(c.amount || 0))), 0),
-          totalPaid: collections.reduce((sum, c) => sum + (parseFloat(String(c.paidAmount || 0))), 0)
+          totalPaid: collections.filter(c => c.status === 'paid').reduce((sum, c) => sum + (parseFloat(String(c.amount || 0))), 0)
         }
       };
       

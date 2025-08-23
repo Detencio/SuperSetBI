@@ -363,7 +363,7 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                 className="flex-1"
               />
               <Button 
-                onClick={sendMessage} 
+                onClick={() => sendMessage()} 
                 disabled={isLoading || !inputMessage.trim()}
                 data-testid="button-send-message"
               >

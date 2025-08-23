@@ -167,6 +167,9 @@ export interface IStorage {
   getInventoryAnalytics(companyId: string): Promise<any>;
   calculateABCClassification(companyId: string): Promise<void>;
   generateStockAlerts(companyId: string): Promise<void>;
+  
+  // Clear data method for testing
+  clearAllData(): Promise<void>;
 }
 
 // DatabaseStorage implementation using Drizzle ORM
@@ -741,11 +744,11 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(dataImports.dataType, filter.dataType));
     }
     
-    const baseQuery = db.select().from(dataImports);
+    let query = db.select().from(dataImports);
     
-    let query = conditions.length > 0 
-      ? baseQuery.where(conditions.length === 1 ? conditions[0] : and(...conditions))
-      : baseQuery;
+    if (conditions.length > 0) {
+      query = query.where(conditions.length === 1 ? conditions[0] : and(...conditions));
+    }
     
     query = query.orderBy(desc(dataImports.createdAt));
     
@@ -852,6 +855,26 @@ export class DatabaseStorage implements IStorage {
         await this.createStockAlert(alert);
       }
     }
+  }
+
+  async clearAllData(): Promise<void> {
+    // Clear all data for testing purposes
+    await db.delete(dataImports);
+    await db.delete(collectionActivities);
+    await db.delete(payments);
+    await db.delete(accountsReceivable);
+    await db.delete(saleItems);
+    await db.delete(enhancedSales);
+    await db.delete(collections);
+    await db.delete(sales);
+    await db.delete(stockAlerts);
+    await db.delete(inventoryMovements);
+    await db.delete(products);
+    await db.delete(categories);
+    await db.delete(warehouses);
+    await db.delete(suppliers);
+    await db.delete(salespeople);
+    await db.delete(customers);
   }
 }
 

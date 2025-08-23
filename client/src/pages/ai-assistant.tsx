@@ -27,10 +27,14 @@ export default function AIAssistantPage() {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        <Topbar 
+          title="Asistente de IA"
+          subtitle="Tu consultor inteligente de negocios"
+          onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
+        />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
           <div className="max-w-7xl mx-auto space-y-6">
