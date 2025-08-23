@@ -42,10 +42,70 @@ const typeIcons = {
   recommendation: '💡'
 };
 
+
 interface AIAssistantProps {
   quickPrompt?: string;
   onQuickPromptProcessed?: () => void;
 }
+
+// Componente para formatear mensajes del asistente
+const FormattedMessage = ({ content }: { content: string }) => {
+  // Función para formatear el texto con saltos de línea y listas
+  const formatText = (text: string) => {
+    // Dividir en párrafos
+    const parts = text.split('\n\n');
+    
+    return parts.map((part, index) => {
+      const trimmedPart = part.trim();
+      if (!trimmedPart) return null;
+      
+      // Detectar listas (líneas que empiezan con -, *, •, números)
+      if (trimmedPart.includes('\n-') || trimmedPart.includes('\n*') || trimmedPart.includes('\n•') || /\n\d+\./.test(trimmedPart)) {
+        const lines = trimmedPart.split('\n');
+        const title = lines[0];
+        const listItems = lines.slice(1).filter(line => line.trim());
+        
+        return (
+          <div key={index} className="mb-4">
+            {title && !title.match(/^[-*•\d]/) && (
+              <p className="font-medium mb-2">{title}</p>
+            )}
+            <ul className="space-y-1 ml-4">
+              {listItems.map((item, itemIndex) => {
+                const cleanItem = item.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '').trim();
+                if (!cleanItem) return null;
+                return (
+                  <li key={itemIndex} className="flex items-start text-sm">
+                    <span className="text-superset-blue mr-2 flex-shrink-0">•</span>
+                    <span>{cleanItem}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      }
+      
+      // Detectar títulos o preguntas
+      if (trimmedPart.length < 100 && (trimmedPart.endsWith(':') || trimmedPart.endsWith('?'))) {
+        return (
+          <h4 key={index} className="font-semibold mb-2">
+            {trimmedPart}
+          </h4>
+        );
+      }
+      
+      // Párrafo normal
+      return (
+        <p key={index} className="mb-3 leading-relaxed">
+          {trimmedPart}
+        </p>
+      );
+    }).filter(Boolean);
+  };
+  
+  return <div className="space-y-2">{formatText(content)}</div>;
+};
 
 export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIAssistantProps = {}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -220,20 +280,20 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-6 py-4">
                   {messages.map((message, index) => (
                     <div
                       key={index}
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`flex max-w-[80%] ${
+                        className={`flex max-w-[85%] ${
                           message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                         }`}
                       >
                         <div
                           className={`flex-shrink-0 ${
-                            message.role === 'user' ? 'ml-2' : 'mr-2'
+                            message.role === 'user' ? 'ml-3' : 'mr-3'
                           }`}
                         >
                           {message.role === 'user' ? (
@@ -241,25 +301,33 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                               <User className="h-4 w-4" />
                             </div>
                           ) : (
-                            <div className="bg-gray-200 dark:bg-gray-700 rounded-full p-2">
-                              <Bot className="h-4 w-4" />
+                            <div className="bg-superset-blue/10 border border-superset-blue/20 rounded-full p-2">
+                              <Bot className="h-4 w-4 text-superset-blue" />
                             </div>
                           )}
                         </div>
                         <div
-                          className={`rounded-lg p-3 ${
+                          className={`rounded-xl shadow-sm border ${
                             message.role === 'user'
-                              ? 'bg-superset-blue text-white'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                              ? 'bg-superset-blue text-white border-superset-blue'
+                              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700'
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                          <p className="text-xs mt-1 opacity-70">
+                          <div className="p-4">
+                            <div className={`text-sm ${message.role === 'assistant' ? '' : 'whitespace-pre-wrap'} leading-relaxed`}>
+                              {message.role === 'assistant' ? (
+                                <FormattedMessage content={message.content} />
+                              ) : (
+                                message.content
+                              )}
+                            </div>
+                          </div>
+                          <div className={`px-4 pb-2 text-xs opacity-70 ${message.role === 'user' ? 'text-white/70' : 'text-gray-500'}`}>
                             {message.timestamp.toLocaleTimeString('es-ES', { 
                               hour: '2-digit', 
                               minute: '2-digit' 
                             })}
-                          </p>
+                          </div>
                         </div>
                       </div>
                     </div>
