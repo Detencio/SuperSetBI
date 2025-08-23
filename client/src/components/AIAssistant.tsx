@@ -48,85 +48,142 @@ interface AIAssistantProps {
   onQuickPromptProcessed?: () => void;
 }
 
-// Componente para formatear mensajes del asistente
+// Componente para formatear mensajes del asistente con diseño profesional
 const FormattedMessage = ({ content }: { content: string }) => {
-  // Función para procesar texto con markdown básico
-  const processMarkdown = (text: string) => {
+  // Función para procesar texto con markdown avanzado
+  const processAdvancedMarkdown = (text: string) => {
     // Procesar texto en negrita **texto**
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
-    
-    return parts.map((part, index) => {
+    let processedText = text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const boldText = part.slice(2, -2);
         return (
-          <strong key={index} className="font-semibold text-gray-900 dark:text-gray-100">
+          <strong key={`bold-${index}`} className="font-semibold text-gray-900 dark:text-gray-100 bg-blue-50 dark:bg-blue-950 px-1 rounded">
             {boldText}
           </strong>
         );
       }
-      return part;
+      return <span key={`text-${index}`}>{part}</span>;
     });
+    
+    return processedText;
   };
 
-  // Función para formatear el texto con saltos de línea y listas
-  const formatText = (text: string) => {
-    // Dividir en párrafos
-    const parts = text.split('\n\n');
+  // Función para formatear el texto con estructura avanzada
+  const formatAdvancedText = (text: string) => {
+    // Dividir en secciones por doble salto de línea
+    const sections = text.split('\n\n');
     
-    return parts.map((part, index) => {
-      const trimmedPart = part.trim();
-      if (!trimmedPart) return null;
+    return sections.map((section, sectionIndex) => {
+      const trimmedSection = section.trim();
+      if (!trimmedSection) return null;
       
-      // Detectar listas (líneas que empiezan con -, *, •, números)
-      if (trimmedPart.includes('\n*') || trimmedPart.includes('\n-') || trimmedPart.includes('\n•') || /\n\d+\./.test(trimmedPart)) {
-        const lines = trimmedPart.split('\n');
-        const title = lines[0];
-        const listItems = lines.slice(1).filter(line => line.trim());
-        
+      // Detectar encabezados principales (###)
+      if (trimmedSection.startsWith('###')) {
         return (
-          <div key={index} className="mb-4 max-w-full">
-            {title && !title.match(/^[-*•\d]/) && (
-              <div className="font-medium mb-2 text-gray-900 dark:text-gray-100 overflow-wrap-anywhere">
-                {processMarkdown(title)}
-              </div>
-            )}
-            <ul className="space-y-2 ml-4 max-w-full">
-              {listItems.map((item, itemIndex) => {
-                const cleanItem = item.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '').trim();
-                if (!cleanItem) return null;
-                return (
-                  <li key={itemIndex} className="flex items-start text-sm max-w-full">
-                    <span className="text-superset-blue mr-3 flex-shrink-0 mt-1">•</span>
-                    <span className="text-gray-700 dark:text-gray-300 overflow-wrap-anywhere flex-1 min-w-0">
-                      {processMarkdown(cleanItem)}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+          <div key={`header-${sectionIndex}`} className="mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-superset-blue flex items-center gap-2">
+              <span className="w-1 h-6 bg-superset-blue rounded-full"></span>
+              {trimmedSection.replace(/^###\s*/, '')}
+            </h3>
           </div>
         );
       }
       
-      // Detectar títulos o preguntas
-      if (trimmedPart.length < 120 && (trimmedPart.endsWith(':') || trimmedPart.endsWith('?'))) {
+      // Detectar listas avanzadas con mejor formato
+      if (trimmedSection.includes('\n*') || trimmedSection.includes('\n-') || trimmedSection.includes('\n•') || /\n\d+\./.test(trimmedSection)) {
+        const lines = trimmedSection.split('\n');
+        const title = lines[0];
+        const listItems = lines.slice(1).filter(line => line.trim());
+        
         return (
-          <h4 key={index} className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
-            {processMarkdown(trimmedPart)}
-          </h4>
+          <div key={`list-${sectionIndex}`} className="mb-6">
+            {title && !title.match(/^[-*•\d]/) && (
+              <div className="font-semibold mb-3 text-gray-800 dark:text-gray-200 text-base border-l-4 border-superset-blue pl-3 bg-gray-50 dark:bg-gray-800 py-2 rounded-r">
+                {processAdvancedMarkdown(title)}
+              </div>
+            )}
+            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <ul className="space-y-3">
+                {listItems.map((item, itemIndex) => {
+                  const cleanItem = item.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '').trim();
+                  if (!cleanItem) return null;
+                  
+                  // Detectar si el item tiene dos puntos (es un subtítulo)
+                  const hasSubtitle = cleanItem.includes(':');
+                  if (hasSubtitle) {
+                    const [subtitle, ...rest] = cleanItem.split(':');
+                    const description = rest.join(':').trim();
+                    return (
+                      <li key={itemIndex} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors">
+                        <div className="w-2 h-2 bg-superset-blue rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                            {processAdvancedMarkdown(subtitle.trim())}
+                          </div>
+                          {description && (
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+                              {processAdvancedMarkdown(description)}
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  }
+                  
+                  return (
+                    <li key={itemIndex} className="flex items-start space-x-3 text-sm">
+                      <div className="w-2 h-2 bg-superset-blue rounded-full mt-2 flex-shrink-0"></div>
+                      <div className="text-gray-700 dark:text-gray-300 leading-relaxed flex-1 min-w-0">
+                        {processAdvancedMarkdown(cleanItem)}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
         );
       }
       
-      // Párrafo normal
+      // Detectar preguntas destacadas
+      if (trimmedSection.length < 120 && trimmedSection.endsWith('?')) {
+        return (
+          <div key={`question-${sectionIndex}`} className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 border-l-4 border-blue-500 rounded-r-lg">
+            <h4 className="font-medium text-blue-800 dark:text-blue-200 flex items-center gap-2">
+              <span className="text-blue-500">🤔</span>
+              {processAdvancedMarkdown(trimmedSection)}
+            </h4>
+          </div>
+        );
+      }
+      
+      // Detectar títulos importantes (que terminan en :)
+      if (trimmedSection.length < 100 && trimmedSection.endsWith(':')) {
+        return (
+          <div key={`title-${sectionIndex}`} className="mb-3">
+            <h4 className="font-semibold text-lg text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
+              {processAdvancedMarkdown(trimmedSection)}
+            </h4>
+          </div>
+        );
+      }
+      
+      // Párrafo normal con mejor estilo
       return (
-        <div key={index} className="mb-3 leading-relaxed text-gray-700 dark:text-gray-300 overflow-wrap-anywhere max-w-full">
-          {processMarkdown(trimmedPart)}
+        <div key={`paragraph-${sectionIndex}`} className="mb-4 p-3 leading-relaxed text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          {processAdvancedMarkdown(trimmedSection)}
         </div>
       );
     }).filter(Boolean);
   };
   
-  return <div className="space-y-2 max-w-full overflow-wrap-anywhere">{formatText(content)}</div>;
+  return (
+    <div className="space-y-4 max-w-full">
+      <div className="prose prose-sm max-w-none dark:prose-invert">
+        {formatAdvancedText(content)}
+      </div>
+    </div>
+  );
 };
 
 export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIAssistantProps = {}) {
@@ -295,7 +352,7 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
       <CardContent className="flex-1 flex flex-col">
         {activeTab === 'chat' ? (
           <>
-            <ScrollArea className="flex-1 pr-4 mb-4">
+            <ScrollArea className="flex-1 pr-4 mb-4 bg-gradient-to-b from-gray-50/50 to-white dark:from-gray-900/50 dark:to-gray-900 rounded-lg">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <Bot className="h-12 w-12 text-muted-foreground mb-4" />
@@ -309,7 +366,7 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-6 py-4">
+                <div className="space-y-8 py-6 px-2">
                   {messages.map((message, index) => (
                     <div
                       key={index}
@@ -336,26 +393,50 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                           )}
                         </div>
                         <div
-                          className={`rounded-xl shadow-sm border min-w-0 flex-1 ${
+                          className={`rounded-xl shadow-lg border-2 min-w-0 flex-1 transition-all hover:shadow-xl ${
                             message.role === 'user'
-                              ? 'bg-superset-blue text-white border-superset-blue'
-                              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700'
+                              ? 'bg-gradient-to-br from-superset-blue to-blue-600 text-white border-superset-blue transform hover:scale-[1.02]'
+                              : 'bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600'
                           }`}
                         >
-                          <div className="p-4">
-                            <div className={`text-sm leading-relaxed overflow-wrap-anywhere ${message.role === 'assistant' ? '' : 'whitespace-pre-wrap'}`}>
+                          {message.role === 'assistant' && (
+                            <div className="bg-gradient-to-r from-superset-blue/10 to-blue-500/10 px-4 py-2 rounded-t-xl border-b border-gray-200 dark:border-gray-700">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="text-xs font-medium text-superset-blue dark:text-blue-400">Asistente IA</span>
+                                <span className="text-xs text-gray-500">• Powered by Gemini</span>
+                              </div>
+                            </div>
+                          )}
+                          <div className="p-5">
+                            <div className={`leading-relaxed overflow-wrap-anywhere ${
+                              message.role === 'assistant' ? 'text-sm' : 'text-sm whitespace-pre-wrap font-medium'
+                            }`}>
                               {message.role === 'assistant' ? (
                                 <FormattedMessage content={message.content} />
                               ) : (
-                                message.content
+                                <div className="flex items-start gap-2">
+                                  <span className="text-blue-200">💬</span>
+                                  <span>{message.content}</span>
+                                </div>
                               )}
                             </div>
                           </div>
-                          <div className={`px-4 pb-2 text-xs opacity-70 ${message.role === 'user' ? 'text-white/70' : 'text-gray-500'}`}>
-                            {message.timestamp.toLocaleTimeString('es-ES', { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
+                          <div className={`px-5 pb-3 text-xs flex items-center justify-between opacity-70 ${
+                            message.role === 'user' ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'
+                          }`}>
+                            <span>
+                              {message.timestamp.toLocaleTimeString('es-ES', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </span>
+                            {message.role === 'assistant' && (
+                              <div className="flex items-center gap-1">
+                                <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+                                <span>Respuesta generada</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -363,15 +444,22 @@ export default function AIAssistant({ quickPrompt, onQuickPromptProcessed }: AIA
                   ))}
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="flex mr-2">
-                        <div className="bg-gray-200 dark:bg-gray-700 rounded-full p-2">
-                          <Bot className="h-4 w-4" />
+                      <div className="flex mr-3">
+                        <div className="bg-superset-blue/20 border-2 border-superset-blue/30 rounded-full p-2 animate-pulse">
+                          <Bot className="h-4 w-4 text-superset-blue" />
                         </div>
                       </div>
-                      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
-                        <div className="flex items-center space-x-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-sm">Pensando...</span>
+                      <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg p-4 border-2 border-gray-300 dark:border-gray-600">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-superset-blue rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-superset-blue rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                            <div className="w-2 h-2 bg-superset-blue rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                          </div>
+                          <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Analizando datos y generando respuesta...</span>
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          Procesando información de tu negocio con IA
                         </div>
                       </div>
                     </div>
