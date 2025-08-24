@@ -324,7 +324,7 @@ export default function PDFCustomizationWizard({
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(config.sections).map(([key, value]) => {
+                  {Object.entries(config.sections).map(([key, value], index) => {
                     const sectionLabels: { [key: string]: { title: string; description: string } } = {
                       executiveSummary: { title: "Resumen Ejecutivo", description: "Visión general de métricas clave" },
                       kpiMetrics: { title: "Métricas KPI", description: "Indicadores de rendimiento detallados" },
@@ -338,7 +338,7 @@ export default function PDFCustomizationWizard({
                     const section = sectionLabels[key];
                     return (
                       <motion.div
-                        key={key}
+                        key={`section-${key}-${index}`}
                         className={`p-4 border rounded-lg transition-all duration-200 ${
                           value ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'
                         }`}

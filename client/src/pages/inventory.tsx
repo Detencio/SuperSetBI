@@ -24,6 +24,7 @@ import AdvancedFilters from "@/components/AdvancedFilters";
 import { generateDynamicFilterConfigs, INVENTORY_FILTER_CONFIGS } from "@/components/FilterConfigurations";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import PDFCustomizationWizard, { PDFCustomizationConfig } from "@/components/reports/pdf-customization-wizard";
+import { generateCustomPDF } from "@/lib/pdf-generator";
 
 export default function Inventory() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,16 +62,32 @@ export default function Inventory() {
   const handleGenerateCustomReport = async (config: PDFCustomizationConfig) => {
     setIsGeneratingReport(true);
     try {
-      // Aquí integrarías con el sistema de generación de PDFs existente
-      // usando la configuración del wizard
-      console.log('Generando reporte con configuración:', config);
-      
-      // Simular generación de reporte por ahora
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Usar la configuración del wizard para personalizar el reporte
+      const customReportConfig = {
+        title: config.title,
+        subtitle: config.subtitle,
+        includeDate: config.includeDate,
+        includeCompanyLogo: config.includeCompanyLogo,
+        colorTheme: config.design.colorTheme,
+        layout: config.design.layout,
+        sections: config.sections,
+        charts: config.charts,
+        filters: config.filters
+      };
+
+      const reportData = {
+        products: finalFilteredProducts || [],
+        kpis: inventoryKPIs,
+        alerts: inventoryAlerts || []
+      };
+
+      // Generar y descargar el PDF personalizado
+      await generateCustomPDF(customReportConfig, reportData);
       
       setShowWizard(false);
     } catch (error) {
       console.error('Error generando reporte:', error);
+      alert('Error al generar el reporte. Por favor, inténtelo de nuevo.');
     } finally {
       setIsGeneratingReport(false);
     }
@@ -221,9 +238,12 @@ export default function Inventory() {
                     Reporte Personalizado
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="wizard-description">
                   <DialogHeader>
                     <DialogTitle>Asistente de Reportes PDF</DialogTitle>
+                    <p id="wizard-description" className="text-sm text-muted-foreground">
+                      Personaliza tu reporte de inventario paso a paso
+                    </p>
                   </DialogHeader>
                   <PDFCustomizationWizard 
                     onGenerateReport={handleGenerateCustomReport}
