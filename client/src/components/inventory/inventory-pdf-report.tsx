@@ -264,200 +264,299 @@ export default function InventoryPDFReport({ products, kpis, alerts, analytics }
         doc.text(`SupersetBI - Sistema de Business Intelligence`, pageWidth - 15, pageHeight - 10, { align: 'right' });
       };
 
-      // Page 1: Cover and Executive Summary
+      // Page 1: Dashboard Visual - KPIs Cards
       addHeader();
       addFooter();
 
-      // Date and period
+      // Fecha del reporte
       doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-      doc.setFontSize(12);
-      doc.text(`Fecha del Reporte: ${format(new Date(), 'dd/MM/yyyy', { locale: es })}`, 15, yPosition);
+      doc.setFontSize(10);
+      doc.text(`${format(new Date(), 'dd/MM/yyyy', { locale: es })}`, pageWidth - 15, yPosition, { align: 'right' });
       yPosition += 10;
-      doc.text(`Período: Análisis actual del inventario`, 15, yPosition);
-      yPosition += 20;
 
-      // Executive Summary
+      // Título del dashboard
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(18);
+      doc.setFontSize(24);
       doc.setFont('helvetica', 'bold');
-      doc.text('RESUMEN EJECUTIVO', 15, yPosition);
-      yPosition += 15;
-
-      // Summary metrics
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      const summaryText = [
-        `• Total de Productos: ${reportData.executiveSummary.totalProducts}`,
-        `• Valor Total del Inventario: ${formatDisplayCurrency(reportData.executiveSummary.totalValue)}`,
-        `• Productos con Stock Bajo: ${reportData.executiveSummary.lowStockCount}`,
-        `• Productos Sin Stock: ${reportData.executiveSummary.outOfStockCount}`,
-        `• Rotación de Inventario: ${reportData.executiveSummary.turnoverRate.toFixed(1)}x/año`,
-        `• Nivel de Servicio: ${reportData.executiveSummary.serviceLevel.toFixed(1)}%`
-      ];
-
-      summaryText.forEach(text => {
-        doc.text(text, 15, yPosition);
-        yPosition += 8;
-      });
-
-      yPosition += 10;
-
-      // ROI Projection
+      doc.text('DASHBOARD EJECUTIVO', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 8;
       doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('PROYECCIÓN DE ROI', 15, yPosition);
-      yPosition += 10;
-
-      doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      const roiText = [
-        '• ROI Proyectado Primer Año: 150-300%',
-        '• Reducción de Costos de Inventario: 15-25%',
-        '• Mejora en Nivel de Servicio: +5-10%',
-        '• Optimización de Capital de Trabajo: 20-30%'
-      ];
+      doc.text('Control de Inventario', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 25;
 
-      roiText.forEach(text => {
-        doc.text(text, 15, yPosition);
-        yPosition += 8;
-      });
+      // KPI Cards Layout (2x3 grid)
+      const cardWidth = 85;
+      const cardHeight = 45;
+      const cardSpacing = 10;
+      const startX = 15;
 
-      // Page 2: KPIs and Metrics
-      doc.addPage();
-      addHeader();
-      addFooter();
-
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('KPIs Y MÉTRICAS CLAVE', 15, yPosition);
-      yPosition += 20;
-
-      // KPIs Table
-      const kpiTableData = reportData.kpiMetrics.map(kpi => [
-        kpi.name,
-        kpi.value,
-        kpi.formula,
-        kpi.target,
-        kpi.status === 'excellent' ? 'Excelente' : 
-        kpi.status === 'good' ? 'Bueno' : 
-        kpi.status === 'warning' ? 'Atención' : 'Crítico'
-      ]);
-
-      autoTable(doc, {
-        head: [['KPI', 'Valor Actual', 'Fórmula', 'Objetivo', 'Estado']],
-        body: kpiTableData,
-        startY: yPosition,
-        styles: { fontSize: 9, cellPadding: 4 },
-        headStyles: { fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]], textColor: 255 },
-        alternateRowStyles: { fillColor: [249, 250, 251] },
-        columnStyles: {
-          0: { cellWidth: 40 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 20 }
+      const kpiCards = [
+        {
+          title: 'VALOR TOTAL',
+          value: formatDisplayCurrency(reportData.executiveSummary.totalValue),
+          subtitle: 'Inventario',
+          color: primaryColor,
+          textColor: [255, 255, 255]
+        },
+        {
+          title: 'PRODUCTOS',
+          value: reportData.executiveSummary.totalProducts.toString(),
+          subtitle: 'Total',
+          color: successColor,
+          textColor: [255, 255, 255]
+        },
+        {
+          title: 'ROTACIÓN',
+          value: `${reportData.executiveSummary.turnoverRate.toFixed(1)}x`,
+          subtitle: '/año',
+          color: [34, 197, 94],
+          textColor: [255, 255, 255]
+        },
+        {
+          title: 'SERVICIO',
+          value: `${reportData.executiveSummary.serviceLevel.toFixed(1)}%`,
+          subtitle: 'Nivel',
+          color: reportData.executiveSummary.serviceLevel >= 95 ? successColor : warningColor,
+          textColor: [255, 255, 255]
+        },
+        {
+          title: 'STOCK BAJO',
+          value: reportData.executiveSummary.lowStockCount.toString(),
+          subtitle: 'Productos',
+          color: warningColor,
+          textColor: [255, 255, 255]
+        },
+        {
+          title: 'SIN STOCK',
+          value: reportData.executiveSummary.outOfStockCount.toString(),
+          subtitle: 'Productos',
+          color: errorColor,
+          textColor: [255, 255, 255]
         }
+      ];
+
+      // Dibujar cards en grid 2x3
+      let currentX = startX;
+      let currentY = yPosition;
+      
+      kpiCards.forEach((card, index) => {
+        if (index === 3) {
+          currentX = startX;
+          currentY += cardHeight + cardSpacing;
+        }
+
+        // Fondo del card
+        doc.setFillColor(card.color[0], card.color[1], card.color[2]);
+        doc.roundedRect(currentX, currentY, cardWidth, cardHeight, 3, 3, 'F');
+
+        // Título
+        doc.setTextColor(card.textColor[0], card.textColor[1], card.textColor[2]);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(card.title, currentX + cardWidth/2, currentY + 12, { align: 'center' });
+
+        // Valor principal
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text(card.value, currentX + cardWidth/2, currentY + 28, { align: 'center' });
+
+        // Subtítulo
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(card.subtitle, currentX + cardWidth/2, currentY + 38, { align: 'center' });
+
+        currentX += cardWidth + cardSpacing;
       });
 
-      yPosition = (doc as any).lastAutoTable.finalY + 20;
+      yPosition = currentY + cardHeight + 20;
 
-      // ABC Analysis
-      checkNewPage(60);
-      doc.setFontSize(14);
+      // Gráfico de barras simple para análisis ABC (en la misma página)
+      checkNewPage(80);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.text('ANÁLISIS ABC', 15, yPosition);
       yPosition += 15;
 
-      const abcData = [
-        ['Categoría A (80% valor)', reportData.abcAnalysis.A.count.toString(), formatDisplayCurrency(reportData.abcAnalysis.A.value), `${reportData.abcAnalysis.A.percentage.toFixed(1)}%`],
-        ['Categoría B (15% valor)', reportData.abcAnalysis.B.count.toString(), formatDisplayCurrency(reportData.abcAnalysis.B.value), `${reportData.abcAnalysis.B.percentage.toFixed(1)}%`],
-        ['Categoría C (5% valor)', reportData.abcAnalysis.C.count.toString(), formatDisplayCurrency(reportData.abcAnalysis.C.value), `${reportData.abcAnalysis.C.percentage.toFixed(1)}%`]
+      // Crear gráfico de barras simple para ABC
+      const chartX = 15;
+      const chartY = yPosition;
+      const chartWidth = 170;
+      const chartHeight = 40;
+      const barSpacing = 5;
+      const barWidth = (chartWidth - (barSpacing * 2)) / 3;
+
+      const abcCategories = [
+        { name: 'A', value: reportData.abcAnalysis.A.percentage, color: successColor, label: 'Alto Valor (80%)' },
+        { name: 'B', value: reportData.abcAnalysis.B.percentage, color: warningColor, label: 'Medio Valor (15%)' },
+        { name: 'C', value: reportData.abcAnalysis.C.percentage, color: errorColor, label: 'Bajo Valor (5%)' }
       ];
 
-      autoTable(doc, {
-        head: [['Categoría', 'Cantidad', 'Valor', 'Porcentaje']],
-        body: abcData,
-        startY: yPosition,
-        styles: { fontSize: 10, cellPadding: 5 },
-        headStyles: { fillColor: primaryColor, textColor: 255 }
+      abcCategories.forEach((cat, index) => {
+        const barX = chartX + (index * (barWidth + barSpacing));
+        const barHeight = (cat.value / 100) * chartHeight;
+        const barY = chartY + chartHeight - barHeight;
+
+        // Dibujar barra
+        doc.setFillColor(cat.color[0], cat.color[1], cat.color[2]);
+        doc.rect(barX, barY, barWidth, barHeight, 'F');
+
+        // Etiqueta de categoría
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${cat.name}`, barX + barWidth/2, chartY + chartHeight + 8, { align: 'center' });
+
+        // Porcentaje
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${cat.value.toFixed(1)}%`, barX + barWidth/2, chartY + chartHeight + 16, { align: 'center' });
+
+        // Descripción
+        doc.setFontSize(8);
+        doc.text(cat.label, barX + barWidth/2, chartY + chartHeight + 24, { align: 'center' });
       });
 
-      // Page 3: Alert System
+      yPosition = chartY + chartHeight + 35;
+
+      // Page 2: Alertas Críticas
       doc.addPage();
       addHeader();
       addFooter();
 
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.text('SISTEMA DE ALERTAS', 15, yPosition);
+      doc.text('ALERTAS CRÍTICAS', 15, yPosition);
       yPosition += 20;
 
-      // Alerts Table
-      const alertTableData = reportData.alertSystem.map(alert => [
-        alert.name,
-        alert.priority,
-        alert.criteria,
-        alert.recommendedAction
-      ]);
+      // Crear cards de alertas críticas más visuales
+      const alertCards = reportData.alertSystem.filter(alert => 
+        alert.priority === 'Crítica' || alert.priority === 'Alta'
+      ).slice(0, 4);  // Solo mostrar las 4 más importantes
 
-      autoTable(doc, {
-        head: [['Tipo de Alerta', 'Prioridad', 'Criterio', 'Acción Recomendada']],
-        body: alertTableData,
-        startY: yPosition,
-        styles: { fontSize: 9, cellPadding: 4 },
-        headStyles: { fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]], textColor: 255 },
-        alternateRowStyles: { fillColor: [249, 250, 251] },
-        columnStyles: {
-          0: { cellWidth: 35 },
-          1: { cellWidth: 20 },
-          2: { cellWidth: 40 },
-          3: { cellWidth: 50 }
+      const alertCardWidth = 90;
+      const alertCardHeight = 50;
+      const alertCardSpacing = 8;
+      const alertStartX = 15;
+
+      let alertX = alertStartX;
+      let alertY = yPosition;
+
+      alertCards.forEach((alert, index) => {
+        if (index === 2) {
+          alertX = alertStartX;
+          alertY += alertCardHeight + alertCardSpacing;
         }
+
+        // Determinar color según prioridad
+        const cardColor = alert.priority === 'Crítica' ? errorColor : warningColor;
+
+        // Fondo del card de alerta
+        doc.setFillColor(cardColor[0], cardColor[1], cardColor[2]);
+        doc.roundedRect(alertX, alertY, alertCardWidth, alertCardHeight, 3, 3, 'F');
+
+        // Icono de alerta (triángulo simple)
+        doc.setFillColor(255, 255, 255);
+        doc.triangle(alertX + 10, alertY + 8, alertX + 15, alertY + 18, alertX + 20, alertY + 8, 'F');
+
+        // Título de la alerta
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        const alertTitle = alert.name.length > 20 ? alert.name.substring(0, 20) + '...' : alert.name;
+        doc.text(alertTitle, alertX + 25, alertY + 12);
+
+        // Prioridad
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Prioridad: ${alert.priority}`, alertX + 25, alertY + 22);
+
+        // Acción resumida
+        doc.setFontSize(7);
+        const actionText = alert.recommendedAction.length > 35 ? 
+          alert.recommendedAction.substring(0, 35) + '...' : alert.recommendedAction;
+        doc.text(actionText, alertX + 5, alertY + 35);
+        
+        // Criterio resumido
+        const criteriaText = alert.criteria.length > 35 ? 
+          alert.criteria.substring(0, 35) + '...' : alert.criteria;
+        doc.text(criteriaText, alertX + 5, alertY + 43);
+
+        alertX += alertCardWidth + alertCardSpacing;
       });
 
-      yPosition = (doc as any).lastAutoTable.finalY + 20;
+      yPosition = alertY + alertCardHeight + 25;
 
-      // Recommended Actions
-      checkNewPage(80);
-      doc.setFontSize(14);
+      // Acciones clave visuales
+      checkNewPage(50);
+      doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('ACCIONES RECOMENDADAS', 15, yPosition);
+      doc.text('ACCIONES PRIORITARIAS', 15, yPosition);
       yPosition += 15;
 
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      reportData.executiveSummary.recommendedActions.forEach((action, index) => {
-        doc.text(`${index + 1}. ${action}`, 15, yPosition);
-        yPosition += 8;
+      // Crear bullets visuales para acciones
+      const priorityActions = reportData.executiveSummary.recommendedActions.slice(0, 3);
+      priorityActions.forEach((action, index) => {
+        // Círculo numerado
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.circle(20, yPosition + 3, 4, 'F');
+        
+        // Número
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text((index + 1).toString(), 20, yPosition + 6, { align: 'center' });
+        
+        // Texto de acción
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(action, 30, yPosition + 6);
+        
+        yPosition += 15;
       });
 
-      // Page 4: Current Alerts (if any)
+      // Resumen de alertas actuales (si existen) - versión visual simplificada
       if (alerts && alerts.length > 0) {
-        doc.addPage();
-        addHeader();
-        addFooter();
-
-        doc.setFontSize(18);
+        yPosition += 10;
+        doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        doc.text('ALERTAS ACTUALES', 15, yPosition);
-        yPosition += 20;
+        doc.text('RESUMEN DE ALERTAS ACTUALES', 15, yPosition);
+        yPosition += 15;
 
-        const currentAlertsData = alerts.slice(0, 20).map(alert => [
-          alert.productName || 'N/A',
-          alert.alertType === 'low_stock' ? 'Stock Bajo' :
-          alert.alertType === 'out_of_stock' ? 'Sin Stock' :
-          alert.alertType === 'excess_stock' ? 'Exceso' : 'Otros',
-          alert.priority?.toUpperCase() || 'MEDIA',
-          alert.message || 'Sin mensaje'
-        ]);
+        // Contadores visuales de alertas
+        const alertCounts = {
+          critical: alerts.filter(a => a.priority === 'critical').length,
+          high: alerts.filter(a => a.priority === 'high').length,
+          medium: alerts.filter(a => a.priority === 'medium').length,
+          low: alerts.filter(a => a.priority === 'low').length
+        };
 
-        autoTable(doc, {
-          head: [['Producto', 'Tipo', 'Prioridad', 'Mensaje']],
-          body: currentAlertsData,
-          startY: yPosition,
-          styles: { fontSize: 9, cellPadding: 4 },
-          headStyles: { fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]], textColor: 255 },
-          alternateRowStyles: { fillColor: [249, 250, 251] }
+        const alertSummary = [
+          { label: 'Críticas', count: alertCounts.critical, color: errorColor },
+          { label: 'Altas', count: alertCounts.high, color: warningColor },
+          { label: 'Medias', count: alertCounts.medium, color: [251, 146, 60] },
+          { label: 'Bajas', count: alertCounts.low, color: successColor }
+        ];
+
+        let summaryX = 15;
+        alertSummary.forEach((item) => {
+          if (item.count > 0) {
+            // Badge de alerta
+            doc.setFillColor(item.color[0], item.color[1], item.color[2]);
+            doc.roundedRect(summaryX, yPosition, 35, 15, 2, 2, 'F');
+            
+            // Texto del badge
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${item.count}`, summaryX + 8, yPosition + 9);
+            doc.setFontSize(8);
+            doc.text(item.label, summaryX + 15, yPosition + 9);
+            
+            summaryX += 45;
+          }
         });
       }
 
@@ -477,19 +576,19 @@ export default function InventoryPDFReport({ products, kpis, alerts, analytics }
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileDown className="h-5 w-5" />
-          Reporte Ejecutivo PDF
+          Dashboard Ejecutivo PDF
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          <p>Genera un reporte ejecutivo profesional que incluye:</p>
+          <p>Genera un dashboard ejecutivo visual e impactante que incluye:</p>
           <ul className="list-disc list-inside mt-2 space-y-1">
-            <li>Resumen ejecutivo con KPIs clave</li>
-            <li>6 métricas críticas con fórmulas matemáticas</li>
-            <li>Sistema de alertas con criterios específicos</li>
-            <li>Análisis ABC de productos</li>
-            <li>Proyección de ROI (150-300% primer año)</li>
-            <li>Recomendaciones accionables</li>
+            <li>Dashboard visual con KPIs principales</li>
+            <li>Cards de métricas para toma de decisiones</li>
+            <li>Gráfico de análisis ABC interactivo</li>
+            <li>Sistema de alertas críticas visuales</li>
+            <li>Acciones prioritarias destacadas</li>
+            <li>Resumen ejecutivo impactante</li>
           </ul>
         </div>
         
@@ -507,13 +606,13 @@ export default function InventoryPDFReport({ products, kpis, alerts, analytics }
           ) : (
             <>
               <FileDown className="mr-2 h-4 w-4" />
-              Generar Reporte Ejecutivo PDF
+              Generar Dashboard PDF
             </>
           )}
         </Button>
         
         <p className="text-xs text-muted-foreground text-center">
-          El reporte se descargará automáticamente en formato PDF profesional
+          El dashboard se descargará automáticamente en formato PDF visual
         </p>
       </CardContent>
     </Card>
