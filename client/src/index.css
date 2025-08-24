@@ -422,13 +422,15 @@
   
   /* Mobile-specific inventory fixes */
   .responsive-container {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
   
-  /* Ensure cards are fully visible */
+  /* Ensure cards are fully visible with proper margins */
   .card-container {
     margin-bottom: 0.5rem;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     min-height: fit-content;
   }
   
@@ -436,6 +438,8 @@
   .responsive-layout {
     gap: 0.75rem !important;
     margin-bottom: 1rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
   
   /* Mobile-friendly tab navigation */
@@ -453,5 +457,33 @@
   .mobile-scroll-container {
     max-height: calc(100vh - 120px);
     overflow-y: auto;
+  }
+  
+  /* Specific mobile grid container fixes */
+  .grid {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Mobile card content padding */
+  .grid > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Override any conflicting margins/padding on mobile */
+  main.responsive-container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Ensure content doesn't overflow container */
+  .space-y-6 > * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 }

@@ -147,7 +147,7 @@ export default function Inventory() {
             onRefresh={handleRefresh}
             onMenuClick={handleMenuClick}
           />
-          <main className="responsive-container flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 min-h-0">
+          <main className="responsive-container flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 min-h-0 w-full">
             <InventoryKPIs kpis={null} isLoading={true} />
             <div className="mt-8">
               <Skeleton className="h-96" />
@@ -169,7 +169,7 @@ export default function Inventory() {
             onRefresh={handleRefresh}
             onMenuClick={handleMenuClick}
           />
-          <main className="responsive-container flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 min-h-0">
+          <main className="responsive-container flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 min-h-0 w-full">
             <InventoryKPIs kpis={null} isLoading={false} />
             <div className="mt-8 text-center py-12">
               <p className="text-text-secondary">Error al cargar los productos</p>
@@ -260,7 +260,7 @@ export default function Inventory() {
           </div>
         </div>
         
-        <main className="responsive-container flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 min-h-0">
+        <main className="responsive-container flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 min-h-0 w-full">
           {/* Advanced KPIs Dashboard */}
           <InventoryKPIs kpis={inventoryKPIs || null} isLoading={kpisLoading} />
           
