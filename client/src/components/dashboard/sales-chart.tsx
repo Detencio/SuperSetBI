@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Download, Expand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { RechartsEnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 
 interface SalesChartProps {
   data: Array<{
@@ -86,13 +87,12 @@ export default function SalesChart({ data }: SalesChartProps) {
                   tickFormatter={(value) => `$${(value / 1000)}K`}
                 />
                 <Tooltip
-                  formatter={(value: number) => [formatCurrency(value), 'Ingresos']}
-                  labelStyle={{ color: '#262626' }}
-                  contentStyle={{ 
-                    backgroundColor: 'white', 
-                    border: '1px solid #e8e8e8',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  content={<RechartsEnhancedTooltip />}
+                  cursor={{ 
+                    stroke: "hsl(var(--superset-blue))", 
+                    strokeWidth: 2, 
+                    strokeDasharray: "4 4",
+                    opacity: 0.6
                   }}
                 />
                 <Line

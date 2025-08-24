@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Download, Expand } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RechartsEnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 
 interface InventoryChartProps {
   data: Array<{
@@ -59,15 +60,8 @@ export default function InventoryChart({ data }: InventoryChartProps) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  `${value} unidades`,
-                  name
-                ]}
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e8e8e8',
-                  borderRadius: '8px'
-                }}
+                content={<RechartsEnhancedTooltip />}
+                cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
               />
               <Legend
                 verticalAlign="bottom"

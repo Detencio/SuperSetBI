@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, AlertTriangle, Package, Search, Filter, Download, BarChart3, TrendingUp, Target } from "lucide-react";
+import { Plus, AlertTriangle, Package, Search, Filter, Download, BarChart3, TrendingUp, Target, Wand2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ExportButton from "@/components/ExportButton";
 import CurrencySelector from "@/components/CurrencySelector";
@@ -22,6 +22,8 @@ import { getInventoryExportConfig } from "@/lib/export-utils";
 import { useCurrency } from "@/lib/currency-utils";
 import AdvancedFilters from "@/components/AdvancedFilters";
 import { generateDynamicFilterConfigs, INVENTORY_FILTER_CONFIGS } from "@/components/FilterConfigurations";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import PDFCustomizationWizard, { PDFCustomizationConfig } from "@/components/reports/pdf-customization-wizard";
 
 export default function Inventory() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -31,6 +33,8 @@ export default function Inventory() {
   const [stockFilter, setStockFilter] = useState("all");
   const [advancedFilteredProducts, setAdvancedFilteredProducts] = useState<any[]>([]);
   const [timePeriod, setTimePeriod] = useState("30");
+  const [showWizard, setShowWizard] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['/api/products'],
@@ -51,6 +55,25 @@ export default function Inventory() {
     refetchProducts();
     refetchKPIs();
     refetchAlerts();
+  };
+
+  // Generar reporte personalizado con el wizard
+  const handleGenerateCustomReport = async (config: PDFCustomizationConfig) => {
+    setIsGeneratingReport(true);
+    try {
+      // Aquí integrarías con el sistema de generación de PDFs existente
+      // usando la configuración del wizard
+      console.log('Generando reporte con configuración:', config);
+      
+      // Simular generación de reporte por ahora
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setShowWizard(false);
+    } catch (error) {
+      console.error('Error generando reporte:', error);
+    } finally {
+      setIsGeneratingReport(false);
+    }
   };
 
   const handleMenuClick = () => {
@@ -176,15 +199,40 @@ export default function Inventory() {
                 </Badge>
               )}
             </div>
-            <ExportButton
-              data={finalFilteredProducts || []}
-              config={getInventoryExportConfig(finalFilteredProducts || [])}
-              title="Exportar Inventario"
-              variant="outline"
-              showAdvancedOptions={true}
-              allowColumnSelection={true}
-              allowDateRange={false}
-            />
+            <div className="flex items-center gap-3">
+              <ExportButton
+                data={finalFilteredProducts || []}
+                config={getInventoryExportConfig(finalFilteredProducts || [])}
+                title="Exportar Inventario"
+                variant="outline"
+                showAdvancedOptions={true}
+                allowColumnSelection={true}
+                allowDateRange={false}
+              />
+              
+              {/* Wizard de Personalización de Reportes */}
+              <Dialog open={showWizard} onOpenChange={setShowWizard}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:from-blue-100 hover:to-purple-100"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    Reporte Personalizado
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Asistente de Reportes PDF</DialogTitle>
+                  </DialogHeader>
+                  <PDFCustomizationWizard 
+                    onGenerateReport={handleGenerateCustomReport}
+                    isGenerating={isGeneratingReport}
+                    availableCategories={categories}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
         
