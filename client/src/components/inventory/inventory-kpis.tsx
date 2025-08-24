@@ -55,7 +55,7 @@ export default function InventoryKPIs({ kpis, isLoading }: InventoryKPIsProps) {
 
   if (isLoading) {
     return (
-      <div className="responsive-layout grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
+      <div className="responsive-layout grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
         {Array(8).fill(0).map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardContent className="p-6">
@@ -78,7 +78,7 @@ export default function InventoryKPIs({ kpis, isLoading }: InventoryKPIsProps) {
   return (
     <div className="space-y-6">
       {/* Primary KPIs */}
-      <div className="responsive-layout grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div className="responsive-layout grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {/* Total Stock Value */}
         <Card className="card-container bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardContent className="p-6">
@@ -163,7 +163,7 @@ export default function InventoryKPIs({ kpis, isLoading }: InventoryKPIsProps) {
       </div>
 
       {/* Secondary KPIs */}
-      <div className="responsive-layout grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div className="responsive-layout grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {/* Stock Issues */}
         <Card>
           <CardContent className="p-6">

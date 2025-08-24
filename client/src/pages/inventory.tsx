@@ -147,7 +147,7 @@ export default function Inventory() {
             onRefresh={handleRefresh}
             onMenuClick={handleMenuClick}
           />
-          <main className="responsive-container flex-1 overflow-y-auto p-4 lg:p-6">
+          <main className="responsive-container flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 min-h-0">
             <InventoryKPIs kpis={null} isLoading={true} />
             <div className="mt-8">
               <Skeleton className="h-96" />
@@ -169,7 +169,7 @@ export default function Inventory() {
             onRefresh={handleRefresh}
             onMenuClick={handleMenuClick}
           />
-          <main className="responsive-container flex-1 overflow-y-auto p-4 lg:p-6">
+          <main className="responsive-container flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 min-h-0">
             <InventoryKPIs kpis={null} isLoading={false} />
             <div className="mt-8 text-center py-12">
               <p className="text-text-secondary">Error al cargar los productos</p>
@@ -181,9 +181,9 @@ export default function Inventory() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex min-h-screen sm:h-screen overflow-hidden">
       <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-screen sm:overflow-hidden">
         <TopBar 
           title="Control de Inventario" 
           subtitle="Gestión profesional de productos y stock"
@@ -192,9 +192,9 @@ export default function Inventory() {
         />
         
         {/* Export Actions Bar */}
-        <div className="responsive-container border-b bg-card px-4 lg:px-6 py-3">
-          <div className="responsive-flex flex items-center justify-between">
-            <div className="responsive-flex flex items-center gap-4">
+        <div className="responsive-container border-b bg-card px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
+          <div className="responsive-flex flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+            <div className="responsive-flex flex flex-wrap items-center gap-2 sm:gap-4">
               <CurrencySelector 
                 variant="dropdown"
                 size="sm"
@@ -260,7 +260,7 @@ export default function Inventory() {
           </div>
         </div>
         
-        <main className="responsive-container flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="responsive-container flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 min-h-0">
           {/* Advanced KPIs Dashboard */}
           <InventoryKPIs kpis={inventoryKPIs || null} isLoading={kpisLoading} />
           
@@ -277,9 +277,9 @@ export default function Inventory() {
           </div>
           
           {/* Main Content Tabs */}
-          <div className="mt-8">
-            <Tabs defaultValue="executive" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-5 max-w-2xl">
+          <div className="mt-6 sm:mt-8">
+            <Tabs defaultValue="executive" className="space-y-4 sm:space-y-6">
+              <TabsList className="mobile-tabs grid w-full grid-cols-4 lg:grid-cols-5 max-w-2xl overflow-x-auto">
                 <TabsTrigger value="executive" className="flex items-center gap-2">
                   <Target className="h-4 w-4" />
                   <span className="hidden sm:inline">Ejecutivo</span>

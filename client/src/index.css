@@ -413,3 +413,45 @@
 .mobile-menu-panel {
   transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
+
+/* Mobile viewport optimizations */
+@media (max-width: 640px) {
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Mobile-specific inventory fixes */
+  .responsive-container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  
+  /* Ensure cards are fully visible */
+  .card-container {
+    margin-bottom: 0.5rem;
+    min-height: fit-content;
+  }
+  
+  /* Optimize spacing for mobile */
+  .responsive-layout {
+    gap: 0.75rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Mobile-friendly tab navigation */
+  .mobile-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .mobile-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Ensure mobile content is fully visible */
+  .mobile-scroll-container {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+}
