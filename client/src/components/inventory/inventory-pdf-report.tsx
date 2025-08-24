@@ -416,19 +416,16 @@ export default function InventoryPDFReport({ products, kpis, alerts, analytics }
 
       yPosition += cardHeight + 15;
 
-      // Sección de gráficos compacta
-      const chartSectionWidth = (pageWidth - 40) / 2;
-      
-      // Gráfico de barras estilo aplicación - Estado del Inventario
+      // Gráfico de barras - Estado del Inventario
       doc.setTextColor(60, 60, 60);
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('📊 Estado del Inventario', 20, yPosition);
-      yPosition += 8;
+      doc.text('Estado del Inventario', 20, yPosition);
+      yPosition += 15;
 
       // Fondo del gráfico
       doc.setFillColor(248, 250, 252);
-      doc.roundedRect(20, yPosition, chartSectionWidth - 10, 50, 4, 4, 'F');
+      doc.roundedRect(20, yPosition, pageWidth - 40, 70, 4, 4, 'F');
 
       // Datos reales del estado del inventario
       const stockData = [
@@ -450,73 +447,156 @@ export default function InventoryPDFReport({ products, kpis, alerts, analytics }
       ];
 
       const maxValue = Math.max(...stockData.map(d => d.value));
-      const barChartX = 25;
-      const barChartY = yPosition + 5;
-      const barWidth = 12;
-      const barSpacing = 18;
+      const chartStartX = 30;
+      const chartY = yPosition + 10;
+      const chartWidth = pageWidth - 80;
+      const chartHeight = 40;
+      const barWidth = 20;
+      const barSpacing = (chartWidth - (barWidth * stockData.length)) / (stockData.length + 1);
 
+      // Título del eje Y
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Productos', 25, chartY - 5);
+
+      // Líneas de la grilla
+      for (let i = 0; i <= 4; i++) {
+        const gridY = chartY + (chartHeight / 4) * i;
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.line(chartStartX, gridY, chartStartX + chartWidth, gridY);
+        
+        // Etiquetas del eje Y
+        const value = Math.round(maxValue - (maxValue / 4) * i);
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(7);
+        doc.text(value.toString(), chartStartX - 8, gridY + 2);
+      }
+
+      // Eje X
+      doc.setDrawColor(150, 150, 150);
+      doc.setLineWidth(1);
+      doc.line(chartStartX, chartY + chartHeight, chartStartX + chartWidth, chartY + chartHeight);
+
+      // Eje Y
+      doc.line(chartStartX, chartY, chartStartX, chartY + chartHeight);
+
+      // Dibujar barras
       stockData.forEach((data, index) => {
-        const barHeight = (data.value / maxValue) * 35;
-        const barX = barChartX + (index * barSpacing);
-        const barBottomY = barChartY + 35;
+        const barHeight = (data.value / maxValue) * chartHeight;
+        const barX = chartStartX + barSpacing + (index * (barWidth + barSpacing));
+        const barY = chartY + chartHeight - barHeight;
 
         // Barra
         doc.setFillColor(data.color[0], data.color[1], data.color[2]);
-        doc.roundedRect(barX, barBottomY - barHeight, barWidth, barHeight, 2, 2, 'F');
+        doc.roundedRect(barX, barY, barWidth, barHeight, 2, 2, 'F');
 
         // Valor sobre la barra
         doc.setTextColor(60, 60, 60);
-        doc.setFontSize(7);
+        doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
-        doc.text(data.value.toString(), barX + barWidth/2, barBottomY - barHeight - 2, { align: 'center' });
+        doc.text(data.value.toString(), barX + barWidth/2, barY - 3, { align: 'center' });
 
-        // Etiqueta
+        // Etiqueta del eje X
         doc.setTextColor(100, 100, 100);
-        doc.setFontSize(6);
+        doc.setFontSize(7);
         doc.setFont('helvetica', 'normal');
-        doc.text(data.label, barX + barWidth/2, barBottomY + 6, { align: 'center' });
+        doc.text(data.label, barX + barWidth/2, chartY + chartHeight + 8, { align: 'center' });
       });
 
-      // Gráfico de área estilo aplicación - Tendencia de Valor
-      const areaChartX = chartSectionWidth + 10;
+      yPosition += 85;
+
+      // Gráfico de líneas - Tendencia de Valor
       doc.setTextColor(60, 60, 60);
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('📈 Tendencia de Valor (30 días)', areaChartX, yPosition);
+      doc.text('Tendencia de Valor (Ultimos 30 dias)', 20, yPosition);
+      yPosition += 15;
 
       // Fondo del gráfico
       doc.setFillColor(248, 250, 252);
-      doc.roundedRect(areaChartX, yPosition + 3, chartSectionWidth - 10, 50, 4, 4, 'F');
+      doc.roundedRect(20, yPosition, pageWidth - 40, 70, 4, 4, 'F');
 
-      // Datos simulados de tendencia basados en datos reales
+      // Datos de tendencia basados en datos reales
       const trendData = [
-        { day: 1, value: reportData.executiveSummary.totalValue * 0.92 },
-        { day: 8, value: reportData.executiveSummary.totalValue * 0.89 },
-        { day: 15, value: reportData.executiveSummary.totalValue * 0.95 },
-        { day: 22, value: reportData.executiveSummary.totalValue * 0.98 },
-        { day: 30, value: reportData.executiveSummary.totalValue }
+        { day: 'Sem 1', value: reportData.executiveSummary.totalValue * 0.92 },
+        { day: 'Sem 2', value: reportData.executiveSummary.totalValue * 0.89 },
+        { day: 'Sem 3', value: reportData.executiveSummary.totalValue * 0.95 },
+        { day: 'Sem 4', value: reportData.executiveSummary.totalValue * 0.98 },
+        { day: 'Actual', value: reportData.executiveSummary.totalValue }
       ];
 
-      const areaStartX = areaChartX + 5;
-      const areaWidth = chartSectionWidth - 20;
-      const areaHeight = 35;
-      const areaY = yPosition + 8;
-      const pointSpacing = areaWidth / (trendData.length - 1);
+      const lineChartX = 30;
+      const lineChartY = yPosition + 10;
+      const lineChartWidth = pageWidth - 80;
+      const lineChartHeight = 40;
+      const pointSpacing = lineChartWidth / (trendData.length - 1);
 
-      // Línea de tendencia con área
-      doc.setDrawColor(59, 130, 246);
-      doc.setLineWidth(1.5);
+      // Título del eje Y
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Valor ($)', 25, lineChartY - 5);
 
-      for (let i = 0; i < trendData.length - 1; i++) {
-        const x1 = areaStartX + (i * pointSpacing);
-        const y1 = areaY + areaHeight - ((trendData[i].value / reportData.executiveSummary.totalValue) * areaHeight);
-        const x2 = areaStartX + ((i + 1) * pointSpacing);
-        const y2 = areaY + areaHeight - ((trendData[i + 1].value / reportData.executiveSummary.totalValue) * areaHeight);
+      // Líneas de la grilla
+      const maxTrendValue = Math.max(...trendData.map(d => d.value));
+      const minTrendValue = Math.min(...trendData.map(d => d.value));
+      
+      for (let i = 0; i <= 4; i++) {
+        const gridY = lineChartY + (lineChartHeight / 4) * i;
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.line(lineChartX, gridY, lineChartX + lineChartWidth, gridY);
         
-        doc.line(x1, y1, x2, y2);
+        // Etiquetas del eje Y
+        const value = minTrendValue + ((maxTrendValue - minTrendValue) / 4) * (4 - i);
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(7);
+        doc.text(`$${Math.round(value/1000)}K`, lineChartX - 15, gridY + 2);
       }
 
-      yPosition += 60;
+      // Eje X
+      doc.setDrawColor(150, 150, 150);
+      doc.setLineWidth(1);
+      doc.line(lineChartX, lineChartY + lineChartHeight, lineChartX + lineChartWidth, lineChartY + lineChartHeight);
+
+      // Eje Y
+      doc.line(lineChartX, lineChartY, lineChartX, lineChartY + lineChartHeight);
+
+      // Dibujar línea de tendencia
+      doc.setDrawColor(59, 130, 246);
+      doc.setLineWidth(2);
+      
+      for (let i = 0; i < trendData.length - 1; i++) {
+        const x1 = lineChartX + (i * pointSpacing);
+        const y1 = lineChartY + lineChartHeight - ((trendData[i].value - minTrendValue) / (maxTrendValue - minTrendValue) * lineChartHeight);
+        const x2 = lineChartX + ((i + 1) * pointSpacing);
+        const y2 = lineChartY + lineChartHeight - ((trendData[i + 1].value - minTrendValue) / (maxTrendValue - minTrendValue) * lineChartHeight);
+        
+        doc.line(x1, y1, x2, y2);
+        
+        // Puntos
+        doc.setFillColor(59, 130, 246);
+        doc.circle(x1, y1, 2, 'F');
+      }
+
+      // Último punto
+      const lastIndex = trendData.length - 1;
+      const lastX = lineChartX + (lastIndex * pointSpacing);
+      const lastY = lineChartY + lineChartHeight - ((trendData[lastIndex].value - minTrendValue) / (maxTrendValue - minTrendValue) * lineChartHeight);
+      doc.circle(lastX, lastY, 2, 'F');
+
+      // Etiquetas del eje X
+      trendData.forEach((data, index) => {
+        const x = lineChartX + (index * pointSpacing);
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.text(data.day, x, lineChartY + lineChartHeight + 8, { align: 'center' });
+      });
+
+      yPosition += 85;
 
       // Métricas adicionales compactas
       const metricsY = yPosition;
@@ -583,48 +663,101 @@ export default function InventoryPDFReport({ products, kpis, alerts, analytics }
 
       yPosition += 50;
 
-      // Análisis ABC compacto
+      // Nueva página para que todo quepa bien
+      doc.addPage();
+      yPosition = 30;
+
+      // Análisis ABC completo
       doc.setTextColor(60, 60, 60);
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text('📊 Clasificación ABC', 20, yPosition);
-      yPosition += 12;
+      doc.text('Clasificacion ABC', 20, yPosition);
+      yPosition += 20;
 
       const abcData = [
-        { category: 'A', percentage: reportData.abcAnalysis.A.percentage, color: [59, 130, 246], desc: 'Alto Valor' },
-        { category: 'B', percentage: reportData.abcAnalysis.B.percentage, color: [34, 197, 94], desc: 'Medio Valor' },
-        { category: 'C', percentage: reportData.abcAnalysis.C.percentage, color: [245, 158, 11], desc: 'Bajo Valor' }
+        { 
+          category: 'A', 
+          percentage: reportData.abcAnalysis.A.percentage, 
+          count: reportData.abcAnalysis.A.products.length,
+          color: [59, 130, 246], 
+          desc: 'Alto Valor (80% del valor total)' 
+        },
+        { 
+          category: 'B', 
+          percentage: reportData.abcAnalysis.B.percentage, 
+          count: reportData.abcAnalysis.B.products.length,
+          color: [34, 197, 94], 
+          desc: 'Medio Valor (15% del valor total)' 
+        },
+        { 
+          category: 'C', 
+          percentage: reportData.abcAnalysis.C.percentage, 
+          count: reportData.abcAnalysis.C.products.length,
+          color: [245, 158, 11], 
+          desc: 'Bajo Valor (5% del valor total)' 
+        }
       ];
 
-      let abcX = 20;
-      abcData.forEach((abc) => {
-        // Card pequeña para cada categoría
+      // Cards más grandes y completas para ABC
+      abcData.forEach((abc, index) => {
+        const cardY = yPosition + (index * 45);
+        
+        // Card principal
         doc.setFillColor(248, 250, 252);
-        doc.roundedRect(abcX, yPosition, 55, 25, 3, 3, 'F');
+        doc.roundedRect(20, cardY, pageWidth - 40, 40, 4, 4, 'F');
+        
+        // Indicador de color
+        doc.setFillColor(abc.color[0], abc.color[1], abc.color[2]);
+        doc.roundedRect(25, cardY + 5, 5, 30, 2, 2, 'F');
         
         // Categoría
-        doc.setTextColor(abc.color[0], abc.color[1], abc.color[2]);
-        doc.setFillColor(abc.color[0], abc.color[1], abc.color[2]);
-        doc.circle(abcX + 8, yPosition + 8, 4, 'F');
-        
         doc.setTextColor(60, 60, 60);
-        doc.setFontSize(8);
+        doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Categoría ${abc.category}`, abcX + 16, yPosition + 8);
+        doc.text(`Categoria ${abc.category}`, 40, cardY + 15);
         
-        // Porcentaje
+        // Porcentaje grande
         doc.setTextColor(abc.color[0], abc.color[1], abc.color[2]);
-        doc.setFontSize(12);
+        doc.setFontSize(20);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${abc.percentage.toFixed(1)}%`, abcX + 5, yPosition + 20);
+        doc.text(`${abc.percentage.toFixed(1)}%`, 40, cardY + 30);
         
-        // Descripción
+        // Cantidad de productos
         doc.setTextColor(100, 100, 100);
-        doc.setFontSize(6);
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        doc.text(abc.desc, abcX + 25, yPosition + 20);
+        doc.text(`${abc.count} productos`, 90, cardY + 15);
         
-        abcX += 60;
+        // Descripción completa
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(abc.desc, 90, cardY + 25);
+      });
+
+      yPosition += 150;
+
+      // Resumen ejecutivo final
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Resumen Ejecutivo', 20, yPosition);
+      yPosition += 20;
+
+      const resumenData = [
+        `Total de productos: ${reportData.executiveSummary.totalProducts}`,
+        `Valor total del inventario: ${formatDisplayCurrency(reportData.executiveSummary.totalValue)}`,
+        `Productos con stock bajo: ${reportData.executiveSummary.lowStockCount}`,
+        `Productos sin stock: ${reportData.executiveSummary.outOfStockCount}`,
+        `Nivel de servicio actual: ${reportData.executiveSummary.serviceLevel.toFixed(1)}%`,
+        `Rotacion promedio: ${reportData.executiveSummary.turnoverRate.toFixed(1)} veces por ano`
+      ];
+
+      resumenData.forEach((item, index) => {
+        doc.setTextColor(80, 80, 80);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`• ${item}`, 25, yPosition + (index * 8));
       });
 
       // Footer simple y profesional
