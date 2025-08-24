@@ -279,26 +279,26 @@ export default function Inventory() {
           {/* Main Content Tabs */}
           <div className="mt-6 sm:mt-8">
             <Tabs defaultValue="executive" className="space-y-4 sm:space-y-6">
-              <TabsList className="mobile-tabs grid w-full grid-cols-4 lg:grid-cols-5 max-w-2xl overflow-x-auto">
-                <TabsTrigger value="executive" className="flex items-center gap-2">
-                  <Target className="h-4 w-4" />
-                  <span className="hidden sm:inline">Ejecutivo</span>
+              <TabsList className="mobile-tabs flex w-full max-w-full overflow-x-auto justify-start gap-1 sm:grid sm:grid-cols-4 lg:grid-cols-5 sm:max-w-2xl sm:gap-0">
+                <TabsTrigger value="executive" className="flex items-center gap-1 sm:gap-2 whitespace-nowrap min-w-fit px-2 sm:px-3">
+                  <Target className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">Resumen</span>
                 </TabsTrigger>
-                <TabsTrigger value="products" className="flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  <span className="hidden sm:inline">Productos</span>
+                <TabsTrigger value="products" className="flex items-center gap-1 sm:gap-2 whitespace-nowrap min-w-fit px-2 sm:px-3">
+                  <Package className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">Productos</span>
                 </TabsTrigger>
-                <TabsTrigger value="alerts" className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span className="hidden sm:inline">Alertas</span>
+                <TabsTrigger value="alerts" className="flex items-center gap-1 sm:gap-2 whitespace-nowrap min-w-fit px-2 sm:px-3">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">Alertas</span>
                 </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  <span className="hidden sm:inline">Análisis</span>
+                <TabsTrigger value="analytics" className="flex items-center gap-1 sm:gap-2 whitespace-nowrap min-w-fit px-2 sm:px-3">
+                  <BarChart3 className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">Análisis</span>
                 </TabsTrigger>
-                <TabsTrigger value="recommendations" className="flex items-center gap-2 hidden lg:flex">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="hidden sm:inline">Recomendaciones</span>
+                <TabsTrigger value="recommendations" className="flex items-center gap-1 sm:gap-2 whitespace-nowrap min-w-fit px-2 sm:px-3 hidden lg:flex">
+                  <TrendingUp className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">Reportes</span>
                 </TabsTrigger>
               </TabsList>
 
