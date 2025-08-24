@@ -256,312 +256,151 @@ export default function InventoryPDFReport({ products, kpis, alerts, analytics }
         yPosition = 40;
       };
 
-      // Footer function
-      const addFooter = () => {
-        doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+      // Footer elegante como en la imagen de referencia
+      const addElegantFooter = () => {
+        doc.setTextColor(150, 150, 150);
         doc.setFontSize(8);
         doc.text(`Generado el ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es })}`, 15, pageHeight - 10);
         doc.text(`SupersetBI - Sistema de Business Intelligence`, pageWidth - 15, pageHeight - 10, { align: 'right' });
       };
 
-      // Page 1: Dashboard Visual - KPIs Cards
-      addHeader();
-      addFooter();
-
-      // Fecha del reporte
-      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-      doc.setFontSize(10);
-      doc.text(`${format(new Date(), 'dd/MM/yyyy', { locale: es })}`, pageWidth - 15, yPosition, { align: 'right' });
-      yPosition += 10;
-
-      // Título del dashboard
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(24);
+      // Page 1: Elegant Executive Dashboard como la imagen de referencia
+      
+      // Header azul elegante como en la imagen
+      doc.setFillColor(67, 124, 255); // Azul profesional
+      doc.rect(0, 0, pageWidth, 45, 'F');
+      
+      // Título principal en header
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(28);
       doc.setFont('helvetica', 'bold');
-      doc.text('DASHBOARD EJECUTIVO', pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 8;
+      doc.text('REPORTE EJECUTIVO', 20, 25);
+      
+      // Subtítulo en header
       doc.setFontSize(14);
       doc.setFont('helvetica', 'normal');
-      doc.text('Control de Inventario', pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += 25;
+      doc.text('Control de Inventario - SupersetBI', 20, 35);
+      
+      // Fecha en esquina superior derecha
+      doc.setFontSize(12);
+      doc.text(`${format(new Date(), 'dd/MM/yyyy', { locale: es })}`, pageWidth - 20, 25, { align: 'right' });
+      
+      // Resetear posición después del header
+      yPosition = 70;
 
-      // KPI Cards Layout (2x3 grid)
-      const cardWidth = 85;
-      const cardHeight = 45;
-      const cardSpacing = 10;
-      const startX = 15;
+      // Título del dashboard centrado
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(32);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DASHBOARD EJECUTIVO', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 10;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Control de Inventario', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 40;
+
+      // KPI Cards Layout elegante (3x2 grid como en la imagen)
+      const cardWidth = 55;
+      const cardHeight = 35;
+      const cardSpacing = 8;
+      const gridStartX = 20;
+
+      // Colores profesionales como en la imagen
+      const cardColors = {
+        blue: [67, 124, 255],
+        green: [34, 197, 94], 
+        orange: [255, 133, 51],
+        red: [255, 71, 87],
+        purple: [138, 43, 226]
+      };
 
       const kpiCards = [
         {
           title: 'VALOR TOTAL',
           value: formatDisplayCurrency(reportData.executiveSummary.totalValue),
           subtitle: 'Inventario',
-          color: primaryColor,
-          textColor: [255, 255, 255]
+          color: cardColors.blue
         },
         {
           title: 'PRODUCTOS',
           value: reportData.executiveSummary.totalProducts.toString(),
           subtitle: 'Total',
-          color: successColor,
-          textColor: [255, 255, 255]
+          color: cardColors.green
         },
         {
           title: 'ROTACIÓN',
           value: `${reportData.executiveSummary.turnoverRate.toFixed(1)}x`,
-          subtitle: '/año',
-          color: [34, 197, 94],
-          textColor: [255, 255, 255]
+          subtitle: 'Año',
+          color: cardColors.green
         },
         {
           title: 'SERVICIO',
           value: `${reportData.executiveSummary.serviceLevel.toFixed(1)}%`,
           subtitle: 'Nivel',
-          color: reportData.executiveSummary.serviceLevel >= 95 ? successColor : warningColor,
-          textColor: [255, 255, 255]
+          color: cardColors.green
         },
         {
           title: 'STOCK BAJO',
           value: reportData.executiveSummary.lowStockCount.toString(),
           subtitle: 'Productos',
-          color: warningColor,
-          textColor: [255, 255, 255]
+          color: cardColors.orange
         },
         {
           title: 'SIN STOCK',
           value: reportData.executiveSummary.outOfStockCount.toString(),
           subtitle: 'Productos',
-          color: errorColor,
-          textColor: [255, 255, 255]
+          color: cardColors.red
         }
       ];
 
-      // Dibujar cards en grid 2x3
-      let currentX = startX;
-      let currentY = yPosition;
+      // Dibujar cards en grid 3x2 como en la imagen
+      let cardX = gridStartX;
+      let cardY = yPosition;
       
       kpiCards.forEach((card, index) => {
+        // Nueva fila cada 3 cards
         if (index === 3) {
-          currentX = startX;
-          currentY += cardHeight + cardSpacing;
+          cardX = gridStartX;
+          cardY += cardHeight + cardSpacing + 5;
         }
 
-        // Fondo del card
+        // Sombra sutil del card (comentado por compatibilidad)
+        // doc.setFillColor(0, 0, 0);
+        // doc.setGState(new doc.GState({opacity: 0.1}));
+        // doc.roundedRect(cardX + 1, cardY + 1, cardWidth, cardHeight, 4, 4, 'F');
+        // doc.setGState(new doc.GState({opacity: 1}));
+
+        // Fondo del card con bordes redondeados elegantes
         doc.setFillColor(card.color[0], card.color[1], card.color[2]);
-        doc.roundedRect(currentX, currentY, cardWidth, cardHeight, 3, 3, 'F');
+        doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 4, 4, 'F');
 
-        // Título
-        doc.setTextColor(card.textColor[0], card.textColor[1], card.textColor[2]);
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text(card.title, currentX + cardWidth/2, currentY + 12, { align: 'center' });
-
-        // Valor principal
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.text(card.value, currentX + cardWidth/2, currentY + 28, { align: 'center' });
-
-        // Subtítulo
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text(card.subtitle, currentX + cardWidth/2, currentY + 38, { align: 'center' });
-
-        currentX += cardWidth + cardSpacing;
-      });
-
-      yPosition = currentY + cardHeight + 20;
-
-      // Gráfico de barras simple para análisis ABC (en la misma página)
-      checkNewPage(80);
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('ANÁLISIS ABC', 15, yPosition);
-      yPosition += 15;
-
-      // Crear gráfico de barras simple para ABC
-      const chartX = 15;
-      const chartY = yPosition;
-      const chartWidth = 170;
-      const chartHeight = 40;
-      const barSpacing = 5;
-      const barWidth = (chartWidth - (barSpacing * 2)) / 3;
-
-      const abcCategories = [
-        { name: 'A', value: reportData.abcAnalysis.A.percentage, color: successColor, label: 'Alto Valor (80%)' },
-        { name: 'B', value: reportData.abcAnalysis.B.percentage, color: warningColor, label: 'Medio Valor (15%)' },
-        { name: 'C', value: reportData.abcAnalysis.C.percentage, color: errorColor, label: 'Bajo Valor (5%)' }
-      ];
-
-      abcCategories.forEach((cat, index) => {
-        const barX = chartX + (index * (barWidth + barSpacing));
-        const barHeight = (cat.value / 100) * chartHeight;
-        const barY = chartY + chartHeight - barHeight;
-
-        // Dibujar barra
-        doc.setFillColor(cat.color[0], cat.color[1], cat.color[2]);
-        doc.rect(barX, barY, barWidth, barHeight, 'F');
-
-        // Etiqueta de categoría
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`${cat.name}`, barX + barWidth/2, chartY + chartHeight + 8, { align: 'center' });
-
-        // Porcentaje
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${cat.value.toFixed(1)}%`, barX + barWidth/2, chartY + chartHeight + 16, { align: 'center' });
-
-        // Descripción
-        doc.setFontSize(8);
-        doc.text(cat.label, barX + barWidth/2, chartY + chartHeight + 24, { align: 'center' });
-      });
-
-      yPosition = chartY + chartHeight + 35;
-
-      // Page 2: Alertas Críticas
-      doc.addPage();
-      addHeader();
-      addFooter();
-
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('ALERTAS CRÍTICAS', 15, yPosition);
-      yPosition += 20;
-
-      // Crear cards de alertas críticas más visuales
-      const alertCards = reportData.alertSystem.filter(alert => 
-        alert.priority === 'Crítica' || alert.priority === 'Alta'
-      ).slice(0, 4);  // Solo mostrar las 4 más importantes
-
-      const alertCardWidth = 90;
-      const alertCardHeight = 50;
-      const alertCardSpacing = 8;
-      const alertStartX = 15;
-
-      let alertX = alertStartX;
-      let alertY = yPosition;
-
-      alertCards.forEach((alert, index) => {
-        if (index === 2) {
-          alertX = alertStartX;
-          alertY += alertCardHeight + alertCardSpacing;
-        }
-
-        // Determinar color según prioridad
-        const cardColor = alert.priority === 'Crítica' ? errorColor : warningColor;
-
-        // Fondo del card de alerta
-        doc.setFillColor(cardColor[0], cardColor[1], cardColor[2]);
-        doc.roundedRect(alertX, alertY, alertCardWidth, alertCardHeight, 3, 3, 'F');
-
-        // Icono de alerta (triángulo simple)
-        doc.setFillColor(255, 255, 255);
-        doc.triangle(alertX + 10, alertY + 8, alertX + 15, alertY + 18, alertX + 20, alertY + 8, 'F');
-
-        // Título de la alerta
+        // Título del card
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        const alertTitle = alert.name.length > 20 ? alert.name.substring(0, 20) + '...' : alert.name;
-        doc.text(alertTitle, alertX + 25, alertY + 12);
+        doc.text(card.title, cardX + cardWidth/2, cardY + 8, { align: 'center' });
 
-        // Prioridad
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Prioridad: ${alert.priority}`, alertX + 25, alertY + 22);
-
-        // Acción resumida
-        doc.setFontSize(7);
-        const actionText = alert.recommendedAction.length > 35 ? 
-          alert.recommendedAction.substring(0, 35) + '...' : alert.recommendedAction;
-        doc.text(actionText, alertX + 5, alertY + 35);
-        
-        // Criterio resumido
-        const criteriaText = alert.criteria.length > 35 ? 
-          alert.criteria.substring(0, 35) + '...' : alert.criteria;
-        doc.text(criteriaText, alertX + 5, alertY + 43);
-
-        alertX += alertCardWidth + alertCardSpacing;
-      });
-
-      yPosition = alertY + alertCardHeight + 25;
-
-      // Acciones clave visuales
-      checkNewPage(50);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('ACCIONES PRIORITARIAS', 15, yPosition);
-      yPosition += 15;
-
-      // Crear bullets visuales para acciones
-      const priorityActions = reportData.executiveSummary.recommendedActions.slice(0, 3);
-      priorityActions.forEach((action, index) => {
-        // Círculo numerado
-        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.circle(20, yPosition + 3, 4, 'F');
-        
-        // Número
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text((index + 1).toString(), 20, yPosition + 6, { align: 'center' });
-        
-        // Texto de acción
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        doc.text(action, 30, yPosition + 6);
-        
-        yPosition += 15;
-      });
-
-      // Resumen de alertas actuales (si existen) - versión visual simplificada
-      if (alerts && alerts.length > 0) {
-        yPosition += 10;
+        // Valor principal grande y prominente
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        doc.text('RESUMEN DE ALERTAS ACTUALES', 15, yPosition);
-        yPosition += 15;
+        doc.text(card.value, cardX + cardWidth/2, cardY + 20, { align: 'center' });
 
-        // Contadores visuales de alertas
-        const alertCounts = {
-          critical: alerts.filter(a => a.priority === 'critical').length,
-          high: alerts.filter(a => a.priority === 'high').length,
-          medium: alerts.filter(a => a.priority === 'medium').length,
-          low: alerts.filter(a => a.priority === 'low').length
-        };
+        // Subtítulo
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(card.subtitle, cardX + cardWidth/2, cardY + 28, { align: 'center' });
 
-        const alertSummary = [
-          { label: 'Críticas', count: alertCounts.critical, color: errorColor },
-          { label: 'Altas', count: alertCounts.high, color: warningColor },
-          { label: 'Medias', count: alertCounts.medium, color: [251, 146, 60] },
-          { label: 'Bajas', count: alertCounts.low, color: successColor }
-        ];
+        cardX += cardWidth + cardSpacing;
+      });
 
-        let summaryX = 15;
-        alertSummary.forEach((item) => {
-          if (item.count > 0) {
-            // Badge de alerta
-            doc.setFillColor(item.color[0], item.color[1], item.color[2]);
-            doc.roundedRect(summaryX, yPosition, 35, 15, 2, 2, 'F');
-            
-            // Texto del badge
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${item.count}`, summaryX + 8, yPosition + 9);
-            doc.setFontSize(8);
-            doc.text(item.label, summaryX + 15, yPosition + 9);
-            
-            summaryX += 45;
-          }
-        });
-      }
+      // Footer elegante en la primera página
+      addElegantFooter();
 
-      // Save PDF
-      const fileName = `Reporte_Inventario_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.pdf`;
+      // Mantener solo la primera página con el dashboard principal para máximo impacto
+      // Como en la imagen de referencia, simplicidad y elegancia
+
+      // Save PDF con nombre más profesional
+      const fileName = `Dashboard_Ejecutivo_Inventario_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.pdf`;
       doc.save(fileName);
 
     } catch (error) {
