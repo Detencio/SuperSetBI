@@ -359,3 +359,57 @@
     transform: rotate(360deg);
   }
 }
+
+/* Enhanced responsive transitions for smooth breakpoint changes */
+.responsive-container {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.responsive-layout {
+  transition: grid-template-columns 0.3s ease,
+              grid-template-rows 0.3s ease,
+              flex-direction 0.3s ease,
+              gap 0.3s ease;
+}
+
+.sidebar-transition {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.3s ease;
+}
+
+.card-container {
+  transition: width 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+}
+
+.nav-responsive {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.chart-container {
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.modal-responsive {
+  transition: width 0.3s ease, height 0.3s ease, max-width 0.3s ease;
+}
+
+/* Smooth grid and flex transitions for different screen sizes */
+@media (max-width: 768px) {
+  .responsive-grid {
+    transition: grid-template-columns 0.3s ease, gap 0.3s ease;
+  }
+  
+  .responsive-flex {
+    transition: flex-direction 0.3s ease, gap 0.3s ease;
+  }
+}
+
+/* Enhanced mobile menu transitions */
+.mobile-menu-overlay {
+  transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.mobile-menu-panel {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}

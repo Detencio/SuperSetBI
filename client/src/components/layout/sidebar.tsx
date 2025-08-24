@@ -60,16 +60,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       {/* Overlay for mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="mobile-menu-overlay fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
       
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 lg:z-auto
-        w-64 bg-card shadow-lg flex flex-col
-        transform transition-transform duration-300 ease-in-out
+        sidebar-transition mobile-menu-panel fixed lg:static inset-y-0 left-0 z-50 lg:z-auto
+        w-64 bg-card shadow-lg flex flex-col transform
         ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
       `}>
         {/* Mobile Close Button */}
@@ -110,7 +109,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 key={item.name}
                 href={item.href}
                 onClick={handleLinkClick}
-                className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-200 font-medium ${
+                className={`nav-responsive flex items-center space-x-3 p-4 rounded-xl font-medium ${
                   isActive(item.href)
                     ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
                     : "text-text-primary hover:bg-blue-50 hover:text-blue-600"
@@ -143,7 +142,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   key={item.name}
                   href={item.href}
                   onClick={handleLinkClick}
-                  className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-200 font-medium ${
+                  className={`nav-responsive flex items-center space-x-3 p-4 rounded-xl font-medium ${
                     isActive(item.href)
                       ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
                       : "text-text-primary hover:bg-blue-50 hover:text-blue-600"
@@ -171,7 +170,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   key={item.name}
                   href={item.href}
                   onClick={handleLinkClick}
-                  className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-200 font-medium ${
+                  className={`nav-responsive flex items-center space-x-3 p-4 rounded-xl font-medium ${
                     isActive(item.href)
                       ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg"
                       : "text-text-primary hover:bg-blue-50 hover:text-blue-600"
