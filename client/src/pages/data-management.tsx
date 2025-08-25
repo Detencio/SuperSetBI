@@ -68,12 +68,17 @@ export default function DataManagement() {
   // Función para cancelar la importación
   const cancelImport = () => {
     if (abortController) {
-      abortController.abort();
+      try {
+        abortController.abort();
+      } catch (error) {
+        // Ignorar errores al abortar
+      }
       setAbortController(null);
     }
     setImportProgress(prev => ({
       ...prev,
       isImporting: false,
+      percentage: 0,
       message: 'Importación cancelada por el usuario'
     }));
     
@@ -118,57 +123,68 @@ export default function DataManagement() {
       const decoder = new TextDecoder();
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                
-                if (data.type === 'progress') {
-                  setImportProgress(prev => ({
-                    ...prev,
-                    percentage: data.percentage || 0,
-                    current: data.current || 0,
-                    total: data.total || 0,
-                    message: data.message || '',
-                    successful: data.successful || 0,
-                    failed: data.failed || 0
-                  }));
-                } else if (data.type === 'complete') {
-                  setImportProgress(prev => ({
-                    ...prev,
-                    isImporting: false,
-                    percentage: 100,
-                    message: data.message
-                  }));
-                  setAbortController(null); // Limpiar controlador
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
                   
-                  toast({
-                    title: "✅ Importación Exitosa",
-                    description: data.message,
-                    variant: "default",
-                  });
-                } else if (data.type === 'error') {
-                  setImportProgress(prev => ({ ...prev, isImporting: false }));
-                  setAbortController(null); // Limpiar controlador
-                  
-                  toast({
-                    title: "❌ Error en Importación",
-                    description: data.error,
-                    variant: "destructive",
-                  });
+                  if (data.type === 'progress') {
+                    setImportProgress(prev => ({
+                      ...prev,
+                      percentage: data.percentage || 0,
+                      current: data.current || 0,
+                      total: data.total || 0,
+                      message: data.message || '',
+                      successful: data.successful || 0,
+                      failed: data.failed || 0
+                    }));
+                  } else if (data.type === 'complete') {
+                    setImportProgress(prev => ({
+                      ...prev,
+                      isImporting: false,
+                      percentage: 100,
+                      message: data.message
+                    }));
+                    setAbortController(null); // Limpiar controlador
+                    
+                    toast({
+                      title: "✅ Importación Exitosa",
+                      description: data.message,
+                      variant: "default",
+                    });
+                  } else if (data.type === 'error') {
+                    setImportProgress(prev => ({ ...prev, isImporting: false }));
+                    setAbortController(null); // Limpiar controlador
+                    
+                    toast({
+                      title: "❌ Error en Importación",
+                      description: data.error,
+                      variant: "destructive",
+                    });
+                  }
+                } catch (parseError) {
+                  // Ignorar errores de parsing menores
+                  if (line.trim()) {
+                    console.warn('Error parsing progress data:', parseError);
+                  }
                 }
-              } catch (parseError) {
-                console.error('Error parsing progress data:', parseError);
               }
             }
           }
+        } catch (readerError: any) {
+          // Si el error es por cancelación del usuario, manejarlo silenciosamente
+          if (readerError.name === 'AbortError' || controller.signal.aborted) {
+            return; // Salir silenciosamente sin mostrar error
+          }
+          throw readerError; // Re-lanzar otros errores
         }
       }
     } catch (error: any) {
@@ -176,8 +192,13 @@ export default function DataManagement() {
       setAbortController(null); // Limpiar controlador
       
       // Si fue cancelado por el usuario, no mostrar error
-      if (error.name === 'AbortError') {
+      if (error.name === 'AbortError' || controller.signal.aborted) {
         return; // El mensaje de cancelación ya se mostró en cancelImport()
+      }
+      
+      // Verificar si es un error de red/conexión vs error real
+      if (error.message?.includes('aborted') || error.message?.includes('cancelled')) {
+        return; // Cancelación silenciosa
       }
       
       toast({
