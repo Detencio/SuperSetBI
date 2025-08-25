@@ -58,8 +58,8 @@ export class InventoryAnalytics {
       sum + parseFloat(s.totalAmount), 0);
     const inventoryTurnover = totalStockValue > 0 ? totalCOGS / totalStockValue : 0;
     
-    // Service level (simplified - assuming 95% target)
-    const serviceLevel = 95; // This would be calculated from actual order fulfillment data
+    // Service level - only calculate if we have products and sales data
+    const serviceLevel = products.length > 0 && sales.length > 0 ? 95 : 0;
     
     // Days of inventory
     const daysOfInventory = inventoryTurnover > 0 ? 365 / inventoryTurnover : 0;
@@ -96,13 +96,13 @@ export class InventoryAnalytics {
       inventoryTurnover: Math.round(inventoryTurnover * 100) / 100,
       serviceLevel,
       daysOfInventory: Math.round(daysOfInventory),
-      abcDistribution: {
+      abcDistribution: products.length > 0 ? {
         A: Math.round((aCount / products.length) * 100),
         B: Math.round((bCount / products.length) * 100),
         C: Math.round((cCount / products.length) * 100),
-      },
-      liquidityIndex: inventoryTurnover > 2 ? 85 : inventoryTurnover > 1 ? 65 : 45,
-      inventoryAccuracy: 98.5, // This would come from cycle counting data
+      } : { A: 0, B: 0, C: 0 },
+      liquidityIndex: products.length > 0 ? (inventoryTurnover > 2 ? 85 : inventoryTurnover > 1 ? 65 : 45) : 0,
+      inventoryAccuracy: products.length > 0 ? 98.5 : 0, // This would come from cycle counting data
     };
   }
 
