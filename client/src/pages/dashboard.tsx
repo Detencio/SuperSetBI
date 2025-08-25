@@ -183,7 +183,7 @@ export default function Dashboard() {
         
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {/* KPI Cards Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8 auto-rows-fr">
             <KPICard
               title="Ingresos Totales"
               value={formatDisplayCurrency(analytics?.kpis?.totalRevenue || 0)}

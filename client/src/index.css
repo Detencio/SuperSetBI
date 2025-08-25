@@ -506,3 +506,16 @@
     box-sizing: border-box !important;
   }
 }
+
+/* Dashboard KPI Cards uniform height */
+.auto-rows-fr {
+  grid-auto-rows: 1fr;
+}
+
+/* Ensure KPI cards have equal height */
+@media (min-width: 640px) {
+  .grid.auto-rows-fr > * {
+    height: 100%;
+    min-height: 140px;
+  }
+}

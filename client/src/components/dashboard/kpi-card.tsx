@@ -21,10 +21,10 @@ export default function KPICard({ title, value, change, icon, iconBgColor }: KPI
       whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
     >
-      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
+      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/30 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+        <CardContent className="p-6 h-full flex flex-col justify-between">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex-1 flex flex-col justify-between">
               <motion.p 
                 className="text-text-secondary text-xs font-semibold mb-3 tracking-widest uppercase"
                 initial={{ opacity: 0 }}
