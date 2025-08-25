@@ -187,28 +187,28 @@ export default function Dashboard() {
             <KPICard
               title="Ingresos Totales"
               value={formatDisplayCurrency(analytics?.kpis?.totalRevenue || 0)}
-              change={12.5}
+              change={analytics?.kpis?.totalRevenue ? 0 : 0}
               icon={<DollarSign className="h-6 w-6 text-superset-blue" />}
               iconBgColor="bg-superset-blue"
             />
             <KPICard
               title="Valor de Inventario"
               value={formatDisplayCurrency(analytics?.kpis?.inventoryValue || 0)}
-              change={-3.2}
+              change={analytics?.kpis?.inventoryValue ? 0 : 0}
               icon={<Package className="h-6 w-6 text-superset-teal" />}
               iconBgColor="bg-superset-teal"
             />
             <KPICard
               title="Cobranza Pendiente"
               value={formatDisplayCurrency(analytics?.kpis?.pendingCollections || 0)}
-              change={8.1}
+              change={analytics?.kpis?.pendingCollections ? 0 : 0}
               icon={<CreditCard className="h-6 w-6 text-superset-orange" />}
               iconBgColor="bg-superset-orange"
             />
             <KPICard
               title="Ventas del Mes"
               value={(analytics?.kpis?.monthlySales || 0).toString()}
-              change={15.3}
+              change={analytics?.kpis?.monthlySales ? 0 : 0}
               icon={<TrendingUp className="h-6 w-6 text-success" />}
               iconBgColor="bg-success"
             />
