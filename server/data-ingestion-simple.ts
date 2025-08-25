@@ -36,14 +36,19 @@ const upload = multer({
   },
 });
 
-// Simple CSV parser
+// Simple CSV parser with semicolon support
 function parseCSV(buffer: Buffer): Promise<any[]> {
   return new Promise((resolve, reject) => {
     const results: any[] = [];
     const stream = Readable.from(buffer);
     
+    // Detect separator by checking first line
+    const content = buffer.toString('utf8');
+    const firstLine = content.split('\n')[0];
+    const separator = firstLine.includes(';') ? ';' : ',';
+    
     stream
-      .pipe(csv())
+      .pipe(csv({ separator }))
       .on('data', (data) => results.push(data))
       .on('end', () => resolve(results))
       .on('error', reject);
@@ -101,26 +106,28 @@ function parseChileanNumber(value: string | number): number {
 function validateProduct(record: any): InsertProduct | null {
   try {
     const transformed = {
+      companyId: 'demo-company-123', // Add required companyId
       sku: record.sku || record.SKU || `PROD-${Date.now()}`,
-      name: record.name || record.nombre || record.producto || record.product_name || 'Producto sin nombre',
-      categoryId: record.categoryId || record.category_id || record.categoria || null,
+      name: record.name || record.nombre || record.Nombre || record.producto || record.product_name || 'Producto sin nombre',
+      categoryId: record.categoryId || record.category_id || record.categoria || record.Categoria || null,
       supplierId: record.supplierId || record.supplier_id || record.proveedor || null,
       warehouseId: record.warehouseId || record.warehouse_id || record.almacen || null,
-      price: parseChileanNumber(record.price || record.precio_venta || record.selling_price || 0) + '',
-      costPrice: parseChileanNumber(record.costPrice || record.cost_price || record.precio_costo || 0) + '',
-      stock: parseInt(record.stock || record.stock_actual || record.cantidad || record.current_stock || 0),
-      minStock: parseInt(record.minStock || record.min_stock || record.stock_minimo || 10),
-      maxStock: parseInt(record.maxStock || record.max_stock || record.stock_maximo || 1000),
-      reorderPoint: parseInt(record.reorderPoint || record.reorder_point || record.punto_reorden || 15),
+      price: parseChileanNumber(record.price || record['Precio Venta'] || record.precio_venta || record.selling_price || 0) + '',
+      costPrice: parseChileanNumber(record.costPrice || record.precio_costo || record.cost_price || 0) + '',
+      stock: parseInt(record.stock || record['Stock actual'] || record.stock_actual || record.cantidad || record.current_stock || 0),
+      minStock: parseInt(record.minStock || record.stock_minimo || record.min_stock || 10),
+      maxStock: parseInt(record.maxStock || record.stock_maximo || record.max_stock || 1000),
+      reorderPoint: parseInt(record.reorderPoint || record.punto_reorden || record.reorder_point || 15),
+      leadTimeDays: parseInt(record.leadTimeDays || record.dias_entrega || record.lead_time_days || 7),
       location: record.location || record.ubicacion || '',
-      unitMeasure: record.unitMeasure || record.unit_measure || record.unidad_medida || record.unidad || 'unidad',
+      unitMeasure: record.unitMeasure || record.unidad_medida || record.unit_measure || record.unidad || 'unidad',
       description: record.description || record.descripcion || '',
       isActive: record.isActive !== 'false' && record.is_active !== 'false' && record.estado !== 'inactive'
     };
 
     return insertProductSchema.parse(transformed);
   } catch (error) {
-    console.error('Product validation error:', error, 'Record:', record);
+    console.error('Product validation error:', error, 'Record keys:', Object.keys(record));
     return null;
   }
 }
@@ -158,9 +165,7 @@ export function registerDataIngestionRoutes(app: Express) {
         const validProduct = validateProduct(records[i]);
         if (validProduct) {
           try {
-            // Set company ID for the product
-            const productWithCompany = { ...validProduct, companyId: 'demo-company-123' };
-            await storage.createProduct(productWithCompany);
+            await storage.createProduct(validProduct);
             results.successful++;
           } catch (error) {
             results.failed++;
