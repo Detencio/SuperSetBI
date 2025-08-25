@@ -36,31 +36,80 @@ const upload = multer({
   },
 });
 
-// Simple CSV parser with semicolon support
+// Simple CSV parser with semicolon support and UTF-8 encoding
 function parseCSV(buffer: Buffer): Promise<any[]> {
   return new Promise((resolve, reject) => {
     const results: any[] = [];
-    const stream = Readable.from(buffer);
+    
+    // Ensure proper UTF-8 encoding
+    let content = buffer.toString('utf8');
+    
+    // Remove BOM if present (common in Excel files)
+    if (content.charCodeAt(0) === 0xFEFF) {
+      content = content.slice(1);
+    }
     
     // Detect separator by checking first line
-    const content = buffer.toString('utf8');
     const firstLine = content.split('\n')[0];
     const separator = firstLine.includes(';') ? ';' : ',';
     
+    // Create stream from properly encoded content
+    const stream = Readable.from([content], { encoding: 'utf8' });
+    
     stream
-      .pipe(csv({ separator }))
-      .on('data', (data) => results.push(data))
+      .pipe(csv({ 
+        separator,
+        encoding: 'utf8',
+        skipEmptyLines: true,
+        trim: true
+      }))
+      .on('data', (data) => {
+        // Ensure all string values are properly encoded
+        const cleanData: any = {};
+        for (const [key, value] of Object.entries(data)) {
+          if (typeof value === 'string') {
+            // Fix any encoding issues with Spanish characters
+            cleanData[key.trim()] = value.trim();
+          } else {
+            cleanData[key.trim()] = value;
+          }
+        }
+        results.push(cleanData);
+      })
       .on('end', () => resolve(results))
       .on('error', reject);
   });
 }
 
-// Simple Excel parser
+// Simple Excel parser with UTF-8 support
 function parseExcel(buffer: Buffer): any[] {
   try {
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const workbook = XLSX.read(buffer, { 
+      type: 'buffer',
+      codepage: 65001, // UTF-8
+      cellText: true,
+      cellDates: true
+    });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    return XLSX.utils.sheet_to_json(worksheet);
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+      raw: false, // Convert everything to strings first
+      defval: '', // Default value for empty cells
+      blankrows: false // Skip blank rows
+    });
+    
+    // Clean and ensure proper UTF-8 encoding
+    return jsonData.map((row: any) => {
+      const cleanRow: any = {};
+      for (const [key, value] of Object.entries(row)) {
+        if (typeof value === 'string') {
+          // Trim and ensure proper encoding for Spanish characters
+          cleanRow[key.trim()] = value.trim();
+        } else {
+          cleanRow[key.trim()] = value;
+        }
+      }
+      return cleanRow;
+    });
   } catch (error) {
     throw new Error(`Error parsing Excel file: ${error}`);
   }
@@ -143,13 +192,13 @@ export function registerDataIngestionRoutes(app: Express) {
 
       let records: any[] = [];
       
-      // Parse file based on type
+      // Parse file based on type with proper UTF-8 handling
       if (req.file.mimetype === 'text/csv') {
         records = await parseCSV(req.file.buffer);
       } else if (req.file.mimetype.includes('excel') || req.file.mimetype.includes('spreadsheet')) {
         records = parseExcel(req.file.buffer);
       } else if (req.file.mimetype === 'application/json') {
-        const jsonData = JSON.parse(req.file.buffer.toString());
+        const jsonData = JSON.parse(req.file.buffer.toString('utf8'));
         records = Array.isArray(jsonData) ? jsonData : jsonData.records || [];
       }
 
@@ -238,13 +287,13 @@ export function registerDataIngestionRoutes(app: Express) {
 
       let records: any[] = [];
       
-      // Parse file based on type
+      // Parse file based on type with proper UTF-8 handling
       if (req.file.mimetype === 'text/csv') {
         records = await parseCSV(req.file.buffer);
       } else if (req.file.mimetype.includes('excel') || req.file.mimetype.includes('spreadsheet')) {
         records = parseExcel(req.file.buffer);
       } else if (req.file.mimetype === 'application/json') {
-        const jsonData = JSON.parse(req.file.buffer.toString());
+        const jsonData = JSON.parse(req.file.buffer.toString('utf8'));
         records = Array.isArray(jsonData) ? jsonData : jsonData.records || [];
       }
 
@@ -327,13 +376,13 @@ export function registerDataIngestionRoutes(app: Express) {
 
       let records: any[] = [];
       
-      // Parse file based on type
+      // Parse file based on type with proper UTF-8 handling
       if (req.file.mimetype === 'text/csv') {
         records = await parseCSV(req.file.buffer);
       } else if (req.file.mimetype.includes('excel') || req.file.mimetype.includes('spreadsheet')) {
         records = parseExcel(req.file.buffer);
       } else if (req.file.mimetype === 'application/json') {
-        const jsonData = JSON.parse(req.file.buffer.toString());
+        const jsonData = JSON.parse(req.file.buffer.toString('utf8'));
         records = Array.isArray(jsonData) ? jsonData : jsonData.records || [];
       }
 
