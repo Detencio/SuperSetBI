@@ -96,18 +96,18 @@ export default function DataManagement() {
     const templates = {
       products: {
         filename: 'plantilla_productos.csv',
-        headers: ['nombre', 'categoria', 'precio', 'costo', 'stock_actual', 'stock_minimo', 'sku', 'descripcion'],
-        sample: ['Producto Ejemplo', 'Categoría A', '1500', '800', '100', '10', 'SKU001', 'Descripción del producto']
+        headers: ['sku', 'nombre', 'descripcion', 'categoria', 'proveedor', 'precio_costo', 'precio_venta', 'stock_actual', 'stock_minimo', 'stock_maximo', 'punto_reorden', 'dias_entrega', 'ubicacion', 'unidad_medida', 'estado'],
+        sample: ['SKU001', 'Producto Ejemplo', 'Descripción del producto', 'Categoría A', 'Proveedor XYZ', '1.500,00', '2.250,00', '100', '20', '500', '30', '7', 'A1-B2', 'unidad', 'active']
       },
       sales: {
         filename: 'plantilla_ventas.csv',
-        headers: ['fecha_venta', 'cliente_email', 'cliente_nombre', 'productos', 'total', 'vendedor'],
-        sample: ['2024-01-15', 'cliente@email.com', 'Cliente Ejemplo', 'SKU001:2', '3000', 'Vendedor A']
+        headers: ['numero_factura', 'cliente_id', 'cliente_nombre', 'fecha_venta', 'fecha_vencimiento', 'subtotal', 'impuestos', 'descuento', 'total', 'estado_pago', 'metodo_pago', 'canal', 'moneda'],
+        sample: ['INV-001', 'CUST001', 'Cliente Ejemplo', '2024-01-15', '2024-02-15', '100,00', '19,00', '0,00', '119,00', 'pending', 'credit', 'store', 'CLP']
       },
       customers: {
         filename: 'plantilla_clientes.csv',
-        headers: ['email', 'nombre', 'telefono', 'direccion', 'tipo'],
-        sample: ['cliente@email.com', 'Cliente Ejemplo', '+56912345678', 'Dirección 123', 'regular']
+        headers: ['cliente_id', 'cliente_nombre', 'factura_id', 'fecha_factura', 'fecha_vencimiento', 'monto_original', 'monto_pendiente', 'moneda', 'estado', 'prioridad', 'agente_cobranza', 'ultimo_contacto'],
+        sample: ['CUST001', 'Cliente Ejemplo', 'INV-001', '2024-01-15', '2024-02-15', '1.000,00', '750,00', 'CLP', 'overdue_30', 'high', 'Agent Smith', '2024-01-20']
       }
     };
 

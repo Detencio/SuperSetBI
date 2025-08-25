@@ -86,8 +86,8 @@ export function validateProducts(records: any[]): ValidationResult {
         categoryId: record.categoryId || record.category_id || record.categoria,
         supplierId: record.supplierId || record.supplier_id || record.proveedor,
         warehouseId: record.warehouseId || record.warehouse_id || record.almacen,
-        price: parseFloat(record.price || record.precio_venta || record.selling_price || 0),
-        costPrice: parseFloat(record.costPrice || record.cost_price || record.precio_costo || 0),
+        price: parseChileanNumber(record.price || record.precio_venta || record.selling_price || '0'),
+        costPrice: parseChileanNumber(record.costPrice || record.cost_price || record.precio_costo || '0'),
         stock: parseInt(record.stock || record.cantidad || record.current_stock || 0),
         minStock: parseInt(record.minStock || record.min_stock || record.stock_minimo || 10),
         maxStock: parseInt(record.maxStock || record.max_stock || record.stock_maximo || 1000),
@@ -131,10 +131,10 @@ export function validateSales(records: any[]): ValidationResult {
         salespersonId: record.salespersonId || record.salesperson_id || record.vendedor_id,
         saleDate: record.saleDate || record.sale_date || record.fecha_venta || new Date().toISOString(),
         dueDate: record.dueDate || record.due_date || record.fecha_vencimiento,
-        subtotal: parseFloat(record.subtotal || record.sub_total || 0),
-        taxAmount: parseFloat(record.taxAmount || record.tax_amount || record.impuestos || 0),
-        discountAmount: parseFloat(record.discountAmount || record.discount_amount || record.descuento || 0),
-        totalAmount: parseFloat(record.totalAmount || record.total_amount || record.total || 0),
+        subtotal: parseChileanNumber(record.subtotal || record.sub_total || '0'),
+        taxAmount: parseChileanNumber(record.taxAmount || record.tax_amount || record.impuestos || '0'),
+        discountAmount: parseChileanNumber(record.discountAmount || record.discount_amount || record.descuento || '0'),
+        totalAmount: parseChileanNumber(record.totalAmount || record.total_amount || record.total || '0'),
         paymentStatus: record.paymentStatus || record.payment_status || record.estado_pago || 'pending',
         paymentMethod: record.paymentMethod || record.payment_method || record.metodo_pago,
         channel: record.channel || record.canal || 'store',
@@ -174,8 +174,8 @@ export function validateReceivables(records: any[]): ValidationResult {
         invoiceId: record.invoiceId || record.invoice_id || record.factura_id,
         invoiceDate: record.invoiceDate || record.invoice_date || record.fecha_factura,
         dueDate: record.dueDate || record.due_date || record.fecha_vencimiento,
-        originalAmount: parseFloat(record.originalAmount || record.original_amount || record.monto_original || 0),
-        outstandingAmount: parseFloat(record.outstandingAmount || record.outstanding_amount || record.monto_pendiente || 0),
+        originalAmount: parseChileanNumber(record.originalAmount || record.original_amount || record.monto_original || '0'),
+        outstandingAmount: parseChileanNumber(record.outstandingAmount || record.outstanding_amount || record.monto_pendiente || '0'),
         currency: record.currency || record.moneda || 'USD',
         agingDays: parseInt(record.agingDays || record.aging_days || record.dias_vencimiento || 0),
         status: record.status || record.estado || 'current',
@@ -245,7 +245,7 @@ export function generateProductTemplate(format: 'csv' | 'excel'): string | Buffe
   
   const sampleData = [
     ['PROD001', 'Producto Ejemplo', 'Descripción del producto', 'Categoría A', 'Proveedor XYZ', 
-     '10.50', '15.75', '100', '20', '500', '30', '7', 'A1-B2', 'unidad', 'active']
+     '10,50', '15,75', '100', '20', '500', '30', '7', 'A1-B2', 'unidad', 'active']
   ];
 
   if (format === 'csv') {
@@ -267,7 +267,7 @@ export function generateSalesTemplate(format: 'csv' | 'excel'): string | Buffer 
   
   const sampleData = [
     ['INV-001', 'CUST001', 'Cliente Ejemplo', '2024-01-15', '2024-02-15', 
-     '100.00', '19.00', '0.00', '119.00', 'pending', 'credit', 'store', 'USD']
+     '100,00', '19,00', '0,00', '119,00', 'pending', 'credit', 'store', 'CLP']
   ];
 
   if (format === 'csv') {
@@ -289,7 +289,7 @@ export function generateReceivablesTemplate(format: 'csv' | 'excel'): string | B
   
   const sampleData = [
     ['CUST001', 'Cliente Ejemplo', 'INV-001', '2024-01-15', '2024-02-15', 
-     '1000.00', '750.00', 'USD', 'overdue_30', 'high', 'Agent Smith', '2024-01-20']
+     '1.000,00', '750,00', 'CLP', 'overdue_30', 'high', 'Agent Smith', '2024-01-20']
   ];
 
   if (format === 'csv') {
@@ -332,6 +332,42 @@ export function processBatches<T>(items: T[], batchSize: number = 100): T[][] {
     batches.push(items.slice(i, i + batchSize));
   }
   return batches;
+}
+
+// Función para parsear números en formato chileno (1.000,22)
+export function parseChileanNumber(value: string | number): number {
+  if (typeof value === 'number') return value;
+  if (!value) return 0;
+  
+  let cleanString = String(value).trim();
+  
+  // Si contiene punto y coma, formato chileno (1.000,22)
+  if (cleanString.includes('.') && cleanString.includes(',')) {
+    // Remover puntos (separador de miles) y reemplazar coma por punto decimal
+    cleanString = cleanString.replace(/\./g, '').replace(',', '.');
+  }
+  // Si solo contiene coma, puede ser decimal chileno (22,50)
+  else if (cleanString.includes(',') && !cleanString.includes('.')) {
+    // Si hay más de 3 dígitos después de la coma, es separador de miles
+    const parts = cleanString.split(',');
+    if (parts.length === 2 && parts[1].length <= 2) {
+      // Es decimal: reemplazar coma por punto
+      cleanString = cleanString.replace(',', '.');
+    } else {
+      // Es separador de miles: remover comas
+      cleanString = cleanString.replace(/,/g, '');
+    }
+  }
+  // Si contiene solo punto y más de 2 decimales, es separador de miles
+  else if (cleanString.includes('.')) {
+    const parts = cleanString.split('.');
+    if (parts.length > 2 || (parts.length === 2 && parts[1].length > 2)) {
+      // Es separador de miles: remover puntos
+      cleanString = cleanString.replace(/\./g, '');
+    }
+  }
+  
+  return parseFloat(cleanString) || 0;
 }
 
 export { multer };
