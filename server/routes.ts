@@ -105,7 +105,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products", async (req, res) => {
     try {
       const products = await storage.getProducts('demo-company-123');
-      res.json(products);
+      // Add category name to products for frontend compatibility
+      const productsWithCategory = products.map(product => ({
+        ...product,
+        category: product.categoryId || 'Sin categoría' // Use categoryId as category for now
+      }));
+      res.json(productsWithCategory);
     } catch (error) {
       res.status(500).json({ message: "Error fetching products" });
     }

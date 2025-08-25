@@ -4,6 +4,53 @@ import multer from 'multer';
 import csv from 'csv-parser';
 import * as XLSX from 'xlsx';
 import { Readable } from 'stream';
+
+// Function to fix common UTF-8 encoding issues with Spanish characters
+function fixSpanishCharacters(text: string): string {
+  if (!text || typeof text !== 'string') return text;
+  
+  const replacements: { [key: string]: string } = {
+    // Common UTF-8 encoding issues with Spanish characters
+    'Ã±': 'ñ',
+    'Ã¡': 'á',
+    'Ã©': 'é',
+    'Ã­': 'í',
+    'Ã³': 'ó',
+    'Ãº': 'ú',
+    'Ã¼': 'ü',
+    'ÃÑ': 'Ñ',
+    'ÃÁ': 'Á',
+    'Ã‰': 'É',
+    'ÃÍ': 'Í',
+    'Ã"': 'Ó',
+    'Ãš': 'Ú',
+    'Ãœ': 'Ü',
+    // Additional patterns
+    'Â°': '°',
+    'Â½': '½',
+    'Â¼': '¼',
+    'Â¾': '¾',
+    'â€™': "'",
+    'â€œ': '"',
+    'â€': '"',
+    'â€"': '–',
+    'â€"': '—',
+    // Handle cases where characters appear as single bytes
+    'Ãƒ±': 'ñ',
+    'Ãƒ¡': 'á',
+    'Ãƒ©': 'é',
+    'Ãƒ­': 'í',
+    'Ãƒ³': 'ó',
+    'Ãƒº': 'ú'
+  };
+  
+  let fixed = text;
+  for (const [wrong, correct] of Object.entries(replacements)) {
+    fixed = fixed.replace(new RegExp(wrong, 'g'), correct);
+  }
+  
+  return fixed;
+}
 import {
   insertProductSchema,
   insertEnhancedSaleSchema,
@@ -59,7 +106,6 @@ function parseCSV(buffer: Buffer): Promise<any[]> {
     stream
       .pipe(csv({ 
         separator,
-        encoding: 'utf8',
         skipEmptyLines: true,
         trim: true
       }))
@@ -68,8 +114,8 @@ function parseCSV(buffer: Buffer): Promise<any[]> {
         const cleanData: any = {};
         for (const [key, value] of Object.entries(data)) {
           if (typeof value === 'string') {
-            // Fix any encoding issues with Spanish characters
-            cleanData[key.trim()] = value.trim();
+            // Fix UTF-8 encoding issues with Spanish characters
+            cleanData[key.trim()] = fixSpanishCharacters(value.trim());
           } else {
             cleanData[key.trim()] = value;
           }
@@ -103,7 +149,7 @@ function parseExcel(buffer: Buffer): any[] {
       for (const [key, value] of Object.entries(row)) {
         if (typeof value === 'string') {
           // Trim and ensure proper encoding for Spanish characters
-          cleanRow[key.trim()] = value.trim();
+          cleanRow[key.trim()] = fixSpanishCharacters(value.trim());
         } else {
           cleanRow[key.trim()] = value;
         }
