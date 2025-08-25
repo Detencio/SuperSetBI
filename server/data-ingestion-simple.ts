@@ -134,7 +134,7 @@ function validateProduct(record: any): InsertProduct | null {
 
 export function registerDataIngestionRoutes(app: Express) {
   // Simple product import endpoint
-  // Import products endpoint (frontend expects /api/import/products)
+  // Import products endpoint with real-time progress
   app.post("/api/import/products", upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
@@ -160,7 +160,24 @@ export function registerDataIngestionRoutes(app: Express) {
         errors: [] as string[]
       };
 
-      // Process each record
+      // Set up SSE headers for progress streaming
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      });
+
+      // Send initial progress
+      res.write(`data: ${JSON.stringify({ 
+        type: 'progress', 
+        current: 0, 
+        total: records.length, 
+        percentage: 0,
+        message: 'Iniciando importación...' 
+      })}\n\n`);
+
+      // Process each record with progress updates
       for (let i = 0; i < records.length; i++) {
         const validProduct = validateProduct(records[i]);
         if (validProduct) {
@@ -175,21 +192,41 @@ export function registerDataIngestionRoutes(app: Express) {
           results.failed++;
           results.errors.push(`Row ${i + 1}: Invalid product data`);
         }
+
+        // Send progress update every 50 records or at the end
+        if ((i + 1) % 50 === 0 || i === records.length - 1) {
+          const percentage = Math.round(((i + 1) / records.length) * 100);
+          res.write(`data: ${JSON.stringify({ 
+            type: 'progress', 
+            current: i + 1, 
+            total: records.length, 
+            percentage,
+            successful: results.successful,
+            failed: results.failed,
+            message: `Procesando ${i + 1} de ${records.length} registros...` 
+          })}\n\n`);
+        }
       }
 
-      res.json({
+      // Send final result
+      res.write(`data: ${JSON.stringify({
+        type: 'complete',
         success: true,
         imported: results.successful,
         message: `Se importaron ${results.successful} registros de products.`,
         results
-      });
+      })}\n\n`);
+
+      res.end();
 
     } catch (error) {
       console.error("Product import error:", error);
-      res.status(500).json({ 
+      res.write(`data: ${JSON.stringify({
+        type: 'error',
         success: false,
-        error: error instanceof Error ? error.message : "Import failed" 
-      });
+        error: error instanceof Error ? error.message : "Import failed"
+      })}\n\n`);
+      res.end();
     }
   });
 

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -42,22 +43,107 @@ export default function DataManagement() {
     setSidebarOpen(true);
   };
 
-  // Mutación para importar archivos
-  const importFileMutation = useMutation({
-    mutationFn: async ({ file, type }: { file: File; type: string }) => {
+  // Estados para progreso de importación
+  const [importProgress, setImportProgress] = useState<{
+    isImporting: boolean;
+    percentage: number;
+    current: number;
+    total: number;
+    message: string;
+    successful: number;
+    failed: number;
+  }>({
+    isImporting: false,
+    percentage: 0,
+    current: 0,
+    total: 0,
+    message: '',
+    successful: 0,
+    failed: 0
+  });
+
+  // Función para importar con progreso en tiempo real
+  const importFileWithProgress = async (file: File, type: string) => {
+    setImportProgress({
+      isImporting: true,
+      percentage: 0,
+      current: 0,
+      total: 0,
+      message: 'Iniciando importación...',
+      successful: 0,
+      failed: 0
+    });
+
+    try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await apiRequest('POST', `/api/import/${type}`, formData);
-      return await response.json();
-    },
-    onSuccess: (data, variables) => {
-      toast({
-        title: "✅ Importación Exitosa",
-        description: `Se importaron ${data.imported} registros de ${variables.type}.`,
-        variant: "default",
+      
+      const response = await fetch(`/api/import/${type}`, {
+        method: 'POST',
+        body: formData,
       });
-    },
-    onError: (error) => {
+
+      if (!response.ok) {
+        throw new Error('Error en la importación');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                
+                if (data.type === 'progress') {
+                  setImportProgress(prev => ({
+                    ...prev,
+                    percentage: data.percentage || 0,
+                    current: data.current || 0,
+                    total: data.total || 0,
+                    message: data.message || '',
+                    successful: data.successful || 0,
+                    failed: data.failed || 0
+                  }));
+                } else if (data.type === 'complete') {
+                  setImportProgress(prev => ({
+                    ...prev,
+                    isImporting: false,
+                    percentage: 100,
+                    message: data.message
+                  }));
+                  
+                  toast({
+                    title: "✅ Importación Exitosa",
+                    description: data.message,
+                    variant: "default",
+                  });
+                } else if (data.type === 'error') {
+                  setImportProgress(prev => ({ ...prev, isImporting: false }));
+                  
+                  toast({
+                    title: "❌ Error en Importación",
+                    description: data.error,
+                    variant: "destructive",
+                  });
+                }
+              } catch (parseError) {
+                console.error('Error parsing progress data:', parseError);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      setImportProgress(prev => ({ ...prev, isImporting: false }));
       toast({
         title: "❌ Error en Importación",
         description: "Ocurrió un problema al importar el archivo. Verifica el formato.",
@@ -65,10 +151,10 @@ export default function DataManagement() {
       });
       console.error('Import error:', error);
     }
-  });
+  };
 
   // Manejar carga de archivos
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -85,7 +171,8 @@ export default function DataManagement() {
       return;
     }
 
-    importFileMutation.mutate({ file, type });
+    // Ejecutar importación con progreso en tiempo real
+    await importFileWithProgress(file, type);
     
     // Limpiar input
     event.target.value = '';
@@ -286,6 +373,51 @@ export default function DataManagement() {
                           />
                         </div>
                       </div>
+                      
+                      {/* Indicador de Progreso */}
+                      {importProgress.isImporting && (
+                        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+                          <CardContent className="p-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
+                                  <span className="font-medium text-blue-900 dark:text-blue-100">
+                                    Importando datos...
+                                  </span>
+                                </div>
+                                <span className="text-sm font-mono text-blue-700 dark:text-blue-300">
+                                  {importProgress.percentage}%
+                                </span>
+                              </div>
+                              
+                              <Progress value={importProgress.percentage} className="h-2" />
+                              
+                              <div className="flex justify-between text-sm text-blue-600 dark:text-blue-400">
+                                <span>{importProgress.message}</span>
+                                <span>
+                                  {importProgress.current} / {importProgress.total}
+                                </span>
+                              </div>
+                              
+                              {(importProgress.successful > 0 || importProgress.failed > 0) && (
+                                <div className="flex gap-2">
+                                  {importProgress.successful > 0 && (
+                                    <Badge variant="secondary" className="text-green-700 bg-green-100">
+                                      ✓ {importProgress.successful} exitosos
+                                    </Badge>
+                                  )}
+                                  {importProgress.failed > 0 && (
+                                    <Badge variant="destructive" className="text-red-700 bg-red-100">
+                                      ✗ {importProgress.failed} errores
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
                       
                       <div className="space-y-3">
                         <Alert>
