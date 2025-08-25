@@ -21,10 +21,16 @@ export default function Sales() {
   
   const { data: sales, isLoading, refetch } = useQuery({
     queryKey: ['/api/sales'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 45000 : false,
+    staleTime: 45000,
   });
 
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 45000 : false,
+    staleTime: 45000,
   });
 
   const handleRefresh = () => {

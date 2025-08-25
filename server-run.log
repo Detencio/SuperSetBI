@@ -1,0 +1,11 @@
+C:\Users\daten\Documents\SuperSetBI\server\db.ts:1
+import { Pool } from 'pg';
+         ^
+
+SyntaxError: The requested module 'pg' does not provide an export named 'Pool'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:180:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:263:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:578:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)
+
+Node.js v22.14.0

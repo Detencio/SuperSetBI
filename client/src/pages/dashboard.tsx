@@ -25,19 +25,31 @@ export default function Dashboard() {
   
   const { data: analytics, isLoading, refetch } = useQuery({
     queryKey: ['/api/dashboard/analytics'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 10000 : false,
+    staleTime: 10000,
   });
 
   // Fetch all data for comprehensive export
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 45000 : false,
+    staleTime: 45000,
   });
   
   const { data: sales } = useQuery({
     queryKey: ['/api/sales'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 45000 : false,
+    staleTime: 45000,
   });
   
   const { data: collections } = useQuery({
     queryKey: ['/api/collections'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 45000 : false,
+    staleTime: 45000,
   });
 
   // Función para formatear monedas con conversión automática

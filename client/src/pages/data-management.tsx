@@ -201,6 +201,17 @@ export default function DataManagement() {
                       description: data.message,
                       variant: "default",
                     });
+
+                    // Invalidar cachés para reflejar datos recién importados
+                    try {
+                      await Promise.all([
+                        queryClient.invalidateQueries({ queryKey: ['/api/data-statistics'] }),
+                        queryClient.invalidateQueries({ queryKey: [`/api/${type}`] }),
+                        queryClient.invalidateQueries({ queryKey: ['/api/dashboard/analytics'] }),
+                        queryClient.invalidateQueries({ queryKey: ['/api/inventory/analytics'] }),
+                        queryClient.invalidateQueries({ queryKey: ['/api/inventory/alerts'] }),
+                      ]);
+                    } catch {}
                   } else if (data.type === 'error') {
                     setImportProgress(prev => ({ ...prev, isImporting: false }));
                     setAbortController(null); // Limpiar controlador

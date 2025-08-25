@@ -1,0 +1,2 @@
+sku,name,description,category,supplier,cost_price,selling_price,current_stock,minimum_stock,maximum_stock,reorder_point,location,unit_of_measure
+PROD001,Producto Ejemplo,Descripción del producto,Categoría A,Proveedor XYZ,10.50,15.75,100,20,500,30,A1-B2,unidad

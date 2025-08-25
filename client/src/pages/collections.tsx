@@ -18,6 +18,9 @@ export default function Collections() {
   
   const { data: collections, isLoading, refetch } = useQuery({
     queryKey: ['/api/collections'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 45000 : false,
+    staleTime: 45000,
   });
 
   const handleRefresh = () => {

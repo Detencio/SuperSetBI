@@ -1,8 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 import { storage } from "./storage";
 
-// Inicializar Gemini AI
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+// Inicialización perezosa para asegurar que .env esté cargado antes de leer la clave
+function getAI(): GoogleGenAI | null {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key || key.trim().length === 0) return null;
+  return new GoogleGenAI({ apiKey: key });
+}
 
 export interface AIInsight {
   type: 'opportunity' | 'warning' | 'prediction' | 'recommendation';
@@ -84,6 +88,14 @@ Proporciona un análisis en formato JSON con esta estructura exacta:
 Máximo 5 insights y 5 recomendaciones. Usa datos reales y específicos.
 `;
 
+      const ai = getAI();
+      if (!ai) {
+        return {
+          summary: "IA deshabilitada: falta GEMINI_API_KEY en variables de entorno.",
+          insights: [],
+          recommendations: []
+        } as any;
+      }
       const response = await ai.models.generateContent({
         model: "gemini-2.5-pro",
         config: {
@@ -181,6 +193,10 @@ ${businessContext}
         { role: "user", content: message }
       ];
 
+      const ai = getAI();
+      if (!ai) {
+        return "La IA está deshabilitada porque no hay GEMINI_API_KEY configurada.";
+      }
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: messages.map(msg => ({

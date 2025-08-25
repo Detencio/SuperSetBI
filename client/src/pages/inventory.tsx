@@ -39,14 +39,23 @@ export default function Inventory() {
   
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['/api/products'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 45000 : false,
+    staleTime: 45000,
   });
 
   const { data: inventoryKPIs, isLoading: kpisLoading, refetch: refetchKPIs } = useQuery({
     queryKey: ['/api/inventory/analytics'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 10000 : false,
+    staleTime: 10000,
   });
 
   const { data: inventoryAlerts, isLoading: alertsLoading, refetch: refetchAlerts } = useQuery({
     queryKey: ['/api/inventory/alerts'],
+    refetchOnWindowFocus: true,
+    refetchInterval: typeof document !== 'undefined' && document.visibilityState === 'visible' ? 15000 : false,
+    staleTime: 15000,
   });
 
   // Combine loading states
