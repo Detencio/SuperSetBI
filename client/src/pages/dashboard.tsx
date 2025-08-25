@@ -229,7 +229,7 @@ export default function Dashboard() {
 
           {/* Recent Activities and Alerts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            <RecentActivities activities={mockActivities} />
+            <RecentActivities activities={[]} />
             <QuickActions />
           </div>
         </main>
