@@ -57,8 +57,8 @@ El Asistente de IA de SupersetBI es un consultor inteligente que proporciona ins
 ## 🔧 Tecnología
 
 ### Modelo de IA
-- **Google Gemini 2.5 Flash**: Modelo de lenguaje avanzado
-- **Capacidad**: 1 millón de tokens de contexto
+- **Google Gemini** (2.5 Flash/Pro): Modelo de lenguaje avanzado
+- **Capacidad**: Contexto amplio
 - **Latencia**: Respuestas en 1-3 segundos
 - **Precisión**: Optimizado para análisis empresarial
 
@@ -72,6 +72,10 @@ const businessContext = {
   alerts: await storage.getStockAlerts(companyId)
 };
 ```
+
+### Activación y modo seguro
+- Configura `GEMINI_API_KEY` en `.env` para habilitar la IA.
+- Si la variable no está presente, el sistema responde de forma segura indicando que la IA está deshabilitada (sin fallar la app).
 
 ### Procesamiento Contextual
 ```typescript

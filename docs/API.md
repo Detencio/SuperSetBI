@@ -473,6 +473,16 @@ file: [archivo CSV/Excel]
 
 ### GET /api/data-imports/template/:type
 Descarga plantilla CSV.
+### POST /api/data-ingestion/products
+Importa productos (endpoint con validación simple y progreso por SSE).
+
+Request: multipart/form-data con `file`.
+
+### GET /api/data-ingestion/templates/products?format=csv|excel
+Descarga plantilla de productos en CSV o Excel.
+
+### POST /api/import/products
+Importación con streaming de progreso (texto tipo SSE), útil para UI de carga masiva.
 
 **Tipos disponibles:** `products`, `customers`, `sales`
 

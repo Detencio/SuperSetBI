@@ -51,6 +51,29 @@ y este proyecto adhiere al [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [2.0.1] - 2025-08-25
+
+### 🎉 Agregado
+- Soporte completo para PostgreSQL local con `pg` + Drizzle (`server/db.ts`).
+- Carga automática de `.env` (dotenv) y compatibilidad Windows con `cross-env`.
+- Endpoints de importación/plantillas: `/api/data-ingestion/*` y progreso por streaming.
+
+### 🔄 Cambiado
+- Auto-refresco en frontend (TanStack Query):
+  - Dashboard 10s; Inventario KPIs 10s, Alertas 15s, Listas 45s; Ventas/Cobranzas 45s.
+  - Pausa de polling cuando la pestaña está oculta; invalidación tras importaciones.
+- Asistente IA: manejo seguro cuando falta `GEMINI_API_KEY`.
+
+### 🐛 Corregido
+- Arranque en Windows sin necesidad de exportar variables manualmente.
+
+### 📚 Documentación
+- README e INSTALACION actualizados (.env, migraciones, scripts).
+- Arquitectura: conexión `pg/node-postgres` y carga `.env`.
+- API: secciones de importación de datos.
+
+---
+
 ## [1.5.0] - 2023-12-15
 
 ### 🎉 Agregado

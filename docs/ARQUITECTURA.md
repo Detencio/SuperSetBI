@@ -133,6 +133,7 @@ server/
 | **Express.js** | Framework web | Maduro, flexible, ecosistema |
 | **TypeScript** | Type safety | Consistencia con frontend |
 | **Drizzle ORM** | Database ORM | Type-safe, performance |
+| **pg (node-postgres)** | Driver Postgres | Conexión local/remota |
 | **Zod** | Validación | Runtime type checking |
 | **Connect-pg-simple** | Sesiones | PostgreSQL integration |
 
@@ -167,6 +168,23 @@ export const products = pgTable("products", {
   // ...
 });
 ```
+
+### Conexión a PostgreSQL
+```typescript
+// server/db.ts
+import pg from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import * as schema from '@shared/schema';
+
+const { Pool } = pg;
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : undefined,
+});
+export const db = drizzle(pool, { schema });
+```
+
+El servidor carga `.env` automáticamente (`dotenv/config`) y soporta Windows con `cross-env`.
 
 ### Patrones de Arquitectura
 

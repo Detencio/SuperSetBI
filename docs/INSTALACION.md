@@ -26,15 +26,9 @@ cd supersetBI
 npm install
 ```
 
-### 3. Configurar Variables de Entorno
+### 3. Configurar Variables de Entorno (.env)
 
-Crea un archivo `.env` en la raíz del proyecto:
-
-```bash
-cp .env.example .env
-```
-
-Edita el archivo `.env` con tus configuraciones:
+Crea un archivo `.env` en la raíz del proyecto (el servidor lo carga automáticamente con dotenv):
 
 ```env
 # === BASE DE DATOS ===
@@ -79,7 +73,8 @@ CREATE DATABASE supersetbi;
 ### 5. Ejecutar Migraciones
 
 ```bash
-# Aplicar esquema a la base de datos
+# Generar y aplicar esquema a la base de datos
+npm run db:generate
 npm run db:push
 
 # Verificar conexión
@@ -92,10 +87,10 @@ npm run db:studio
 2. Crear una nueva API key
 3. Copiar la key al archivo `.env`
 
-### 7. Iniciar la Aplicación
+### 7. Iniciar la Aplicación (Windows y macOS/Linux)
 
 ```bash
-# Modo desarrollo
+# Modo desarrollo (usa cross-env para Windows y carga .env automáticamente)
 npm run dev
 
 # Modo producción

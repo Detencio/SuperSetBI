@@ -15,6 +15,22 @@ npm run dev
 # La aplicación estará disponible en http://localhost:5000
 ```
 
+### Requisitos y configuración rápida
+- PostgreSQL local o Neon. Crea `.env` en la raíz con:
+```
+DATABASE_URL=postgresql://usuario:password@localhost:5432/supersetbi
+NODE_ENV=development
+# Opcional para habilitar IA
+GEMINI_API_KEY=AIza...
+```
+
+### Migraciones (Drizzle)
+```bash
+npm run db:generate   # genera SQL en ./migrations
+npm run db:push       # aplica cambios a la base de datos
+npm run db:studio     # abre el estudio de esquema
+```
+
 ### Usando Replit
 1. Fork este proyecto en Replit
 2. La aplicación se ejecutará automáticamente
@@ -62,21 +78,15 @@ npm run dev
 ## 🗄️ Base de Datos
 
 ### Estado Actual
-- **Desarrollo**: In-memory storage para prototipado rápido
-- **Producción**: Preparado para PostgreSQL con Drizzle ORM
+- **Desarrollo/Producción**: PostgreSQL con Drizzle ORM (driver `pg`)
 
-### Migrar a PostgreSQL
+### Migrar/usar PostgreSQL
 Ver documentación completa en [DATABASE_SETUP.md](./DATABASE_SETUP.md)
 
 ```bash
-# Configurar variables de entorno
-echo "DATABASE_URL=your_postgres_url" > .env
-
 # Ejecutar migraciones
-npm run db:migrate
-
-# Cargar datos iniciales
-npm run db:seed
+npm run db:generate
+npm run db:push
 ```
 
 ## 🧪 Testing
