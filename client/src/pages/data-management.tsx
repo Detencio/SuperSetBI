@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Database, 
@@ -23,7 +23,10 @@ import {
   RefreshCw,
   Package,
   ShoppingCart,
-  Users
+  Users,
+  Trash2,
+  AlertTriangle,
+  DollarSign
 } from "lucide-react";
 
 export default function DataManagement() {
@@ -64,6 +67,44 @@ export default function DataManagement() {
 
   // Controlador para cancelar la importación
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+
+  // Query client para invalidar cache
+  const queryClient = useQueryClient();
+
+  // Obtener estadísticas de datos
+  const { data: dataStats = {} } = useQuery({
+    queryKey: ['/api/data-statistics'],
+    queryFn: async () => {
+      const response = await fetch('/api/data-statistics');
+      if (!response.ok) throw new Error('Error fetching data statistics');
+      return response.json();
+    },
+  });
+
+  // Mutación para eliminar datos
+  const deleteDataMutation = useMutation({
+    mutationFn: async (type: string) => {
+      const response = await apiRequest('DELETE', `/api/${type}`);
+      return response.json();
+    },
+    onSuccess: (data, type) => {
+      toast({
+        title: "✅ Datos Eliminados",
+        description: data.message,
+        variant: "default",
+      });
+      // Invalidar cache para actualizar estadísticas
+      queryClient.invalidateQueries({ queryKey: ['/api/data-statistics'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/${type}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Error",
+        description: "No se pudieron eliminar los datos",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Función para cancelar la importación
   const cancelImport = () => {
@@ -280,6 +321,38 @@ export default function DataManagement() {
     });
   };
 
+  // Función para manejar eliminación masiva de datos
+  const handleDeleteAllData = async (type: string) => {
+    const typeNames = {
+      'products': 'productos',
+      'sales': 'ventas',
+      'collections': 'cobranzas',
+      'customers': 'clientes'
+    };
+
+    const typeName = typeNames[type as keyof typeof typeNames] || type;
+    const currentCount = dataStats[type]?.total || 0;
+
+    if (currentCount === 0) {
+      toast({
+        title: "ℹ️ Sin Datos",
+        description: `No hay ${typeName} para eliminar`,
+        variant: "default",
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `⚠️ ¿Estás seguro de que quieres eliminar TODOS los ${typeName}?\n\n` +
+      `Esto eliminará ${currentCount} registros de forma PERMANENTE.\n\n` +
+      `Esta acción NO se puede deshacer.`
+    );
+
+    if (confirmed) {
+      deleteDataMutation.mutate(type);
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
@@ -351,9 +424,10 @@ export default function DataManagement() {
             </div>
 
             <Tabs defaultValue="test-data" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="test-data">Datos de Prueba</TabsTrigger>
                 <TabsTrigger value="import-export">Importar/Exportar</TabsTrigger>
+                <TabsTrigger value="delete-data">Eliminar Datos</TabsTrigger>
                 <TabsTrigger value="configuration">Configuración</TabsTrigger>
                 <TabsTrigger value="migration">Migración BD</TabsTrigger>
               </TabsList>
@@ -361,6 +435,123 @@ export default function DataManagement() {
               {/* Tab: Datos de Prueba */}
               <TabsContent value="test-data">
                 <TestDataGenerator />
+              </TabsContent>
+
+              {/* Tab: Eliminar Datos */}
+              <TabsContent value="delete-data">
+                <div className="grid gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Trash2 className="h-5 w-5 text-red-600" />
+                        Eliminar Datos
+                      </CardTitle>
+                      <CardDescription>
+                        Elimina registros específicos o masivos de la base de datos. <span className="text-red-600 font-medium">¡Usar con precaución!</span>
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      
+                      {/* Eliminación Masiva */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4 text-red-700 dark:text-red-400">Eliminación Masiva</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <Button 
+                            variant="destructive" 
+                            className="h-20 flex flex-col items-center gap-2"
+                            onClick={() => handleDeleteAllData('products')}
+                          >
+                            <Package className="h-6 w-6" />
+                            <span className="text-sm">Eliminar Todos los Productos</span>
+                          </Button>
+                          
+                          <Button 
+                            variant="destructive" 
+                            className="h-20 flex flex-col items-center gap-2"
+                            onClick={() => handleDeleteAllData('sales')}
+                          >
+                            <ShoppingCart className="h-6 w-6" />
+                            <span className="text-sm">Eliminar Todas las Ventas</span>
+                          </Button>
+                          
+                          <Button 
+                            variant="destructive" 
+                            className="h-20 flex flex-col items-center gap-2"
+                            onClick={() => handleDeleteAllData('collections')}
+                          >
+                            <DollarSign className="h-6 w-6" />
+                            <span className="text-sm">Eliminar Todas las Cobranzas</span>
+                          </Button>
+                          
+                          <Button 
+                            variant="destructive" 
+                            className="h-20 flex flex-col items-center gap-2"
+                            onClick={() => handleDeleteAllData('customers')}
+                          >
+                            <Users className="h-6 w-6" />
+                            <span className="text-sm">Eliminar Todos los Clientes</span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Separador */}
+                      <div className="border-t border-gray-200 dark:border-gray-700"></div>
+
+                      {/* Información de Advertencia */}
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>⚠️ Advertencia Importante</AlertTitle>
+                        <AlertDescription>
+                          <ul className="list-disc list-inside space-y-1 mt-2">
+                            <li>La eliminación de datos es <strong>permanente e irreversible</strong></li>
+                            <li>Se recomienda hacer respaldo antes de eliminar</li>
+                            <li>La eliminación masiva puede afectar relaciones entre datos</li>
+                            <li>Solo se eliminan datos de la empresa actual</li>
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+
+                      {/* Estadísticas de Datos */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4">Estadísticas Actuales</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <Card>
+                            <CardContent className="p-4 text-center">
+                              <Package className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                              <p className="text-2xl font-bold">{dataStats.products?.total || 0}</p>
+                              <p className="text-sm text-muted-foreground">Productos</p>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardContent className="p-4 text-center">
+                              <ShoppingCart className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                              <p className="text-2xl font-bold">{dataStats.sales?.total || 0}</p>
+                              <p className="text-sm text-muted-foreground">Ventas</p>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardContent className="p-4 text-center">
+                              <DollarSign className="h-8 w-8 mx-auto mb-2 text-orange-600" />
+                              <p className="text-2xl font-bold">{dataStats.collections?.total || 0}</p>
+                              <p className="text-sm text-muted-foreground">Cobranzas</p>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardContent className="p-4 text-center">
+                              <Users className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                              <p className="text-2xl font-bold">{dataStats.customers?.total || 0}</p>
+                              <p className="text-sm text-muted-foreground">Clientes</p>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </div>
+
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
               {/* Tab: Importar/Exportar */}

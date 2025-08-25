@@ -120,6 +120,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/products/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteProduct(id, 'demo-company-123');
+      if (!deleted) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      res.json({ message: "Product deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting product" });
+    }
+  });
+
+  app.delete("/api/products", async (req, res) => {
+    try {
+      const deletedCount = await storage.deleteAllProducts('demo-company-123');
+      res.json({ message: `${deletedCount} products deleted successfully`, count: deletedCount });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting products" });
+    }
+  });
+
   // Sales API
   app.get("/api/sales", async (req, res) => {
     try {
@@ -136,6 +158,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(sale);
     } catch (error) {
       res.status(500).json({ message: "Error creating sale" });
+    }
+  });
+
+  app.delete("/api/sales/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteSale(id, 'demo-company-123');
+      if (!deleted) {
+        return res.status(404).json({ message: "Sale not found" });
+      }
+      res.json({ message: "Sale deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting sale" });
+    }
+  });
+
+  app.delete("/api/sales", async (req, res) => {
+    try {
+      const deletedCount = await storage.deleteAllSales('demo-company-123');
+      res.json({ message: `${deletedCount} sales deleted successfully`, count: deletedCount });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting sales" });
     }
   });
 
@@ -159,6 +203,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(collection);
     } catch (error) {
       res.status(500).json({ message: "Error updating collection" });
+    }
+  });
+
+  app.delete("/api/collections/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCollection(id, 'demo-company-123');
+      if (!deleted) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      res.json({ message: "Collection deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting collection" });
+    }
+  });
+
+  app.delete("/api/collections", async (req, res) => {
+    try {
+      const deletedCount = await storage.deleteAllCollections('demo-company-123');
+      res.json({ message: `${deletedCount} collections deleted successfully`, count: deletedCount });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting collections" });
+    }
+  });
+
+  // Customers API
+  app.get("/api/customers", async (req, res) => {
+    try {
+      const customers = await storage.getCustomers('demo-company-123');
+      res.json(customers);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching customers" });
+    }
+  });
+
+  app.post("/api/customers", async (req, res) => {
+    try {
+      const customer = await storage.createCustomer(req.body);
+      res.json(customer);
+    } catch (error) {
+      res.status(500).json({ message: "Error creating customer" });
+    }
+  });
+
+  app.delete("/api/customers/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCustomer(id, 'demo-company-123');
+      if (!deleted) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      res.json({ message: "Customer deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting customer" });
+    }
+  });
+
+  app.delete("/api/customers", async (req, res) => {
+    try {
+      const deletedCount = await storage.deleteAllCustomers('demo-company-123');
+      res.json({ message: `${deletedCount} customers deleted successfully`, count: deletedCount });
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting customers" });
     }
   });
 

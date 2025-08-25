@@ -80,6 +80,8 @@ export interface IStorage {
   getProduct(id: string, companyId: string): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: string, product: Partial<Product>, companyId: string): Promise<Product | undefined>;
+  deleteProduct(id: string, companyId: string): Promise<boolean>;
+  deleteAllProducts(companyId: string): Promise<number>;
   getProductsByCategory(categoryId: string, companyId: string): Promise<Product[]>;
   getProductsByWarehouse(warehouseId: string, companyId: string): Promise<Product[]>;
   getProductsBySupplier(supplierId: string, companyId: string): Promise<Product[]>;
@@ -106,6 +108,8 @@ export interface IStorage {
   getSales(companyId: string): Promise<Sale[]>;
   getSale(id: string): Promise<Sale | undefined>;
   createSale(sale: InsertSale): Promise<Sale>;
+  deleteSale(id: string, companyId: string): Promise<boolean>;
+  deleteAllSales(companyId: string): Promise<number>;
   getSalesByDateRange(startDate: Date, endDate: Date): Promise<Sale[]>;
   
   // Collections
@@ -113,6 +117,8 @@ export interface IStorage {
   getCollection(id: string): Promise<Collection | undefined>;
   createCollection(collection: InsertCollection): Promise<Collection>;
   updateCollection(id: string, collection: Partial<Collection>): Promise<Collection | undefined>;
+  deleteCollection(id: string, companyId: string): Promise<boolean>;
+  deleteAllCollections(companyId: string): Promise<number>;
   getCollectionsByStatus(status: string): Promise<Collection[]>;
 
   // Enhanced entities for data ingestion
@@ -121,6 +127,8 @@ export interface IStorage {
   getCustomer(id: string): Promise<Customer | undefined>;
   createCustomer(customer: InsertCustomer): Promise<Customer>;
   updateCustomer(id: string, customer: Partial<Customer>): Promise<Customer | undefined>;
+  deleteCustomer(id: string, companyId: string): Promise<boolean>;
+  deleteAllCustomers(companyId: string): Promise<number>;
 
   // Salespeople
   getSalespeople(companyId: string): Promise<Salesperson[]>;
@@ -418,6 +426,20 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async deleteProduct(id: string, companyId: string): Promise<boolean> {
+    const result = await db
+      .delete(products)
+      .where(and(eq(products.id, id), eq(products.companyId, companyId)));
+    return result.rowCount > 0;
+  }
+
+  async deleteAllProducts(companyId: string): Promise<number> {
+    const result = await db
+      .delete(products)
+      .where(eq(products.companyId, companyId));
+    return result.rowCount || 0;
+  }
+
   async getProductsByCategory(categoryId: string, companyId: string): Promise<Product[]> {
     return db
       .select()
@@ -536,6 +558,20 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
+  async deleteSale(id: string, companyId: string): Promise<boolean> {
+    const result = await db
+      .delete(sales)
+      .where(and(eq(sales.id, id), eq(sales.companyId, companyId)));
+    return result.rowCount > 0;
+  }
+
+  async deleteAllSales(companyId: string): Promise<number> {
+    const result = await db
+      .delete(sales)
+      .where(eq(sales.companyId, companyId));
+    return result.rowCount || 0;
+  }
+
   async getSalesByDateRange(startDate: Date, endDate: Date): Promise<Sale[]> {
     return db
       .select()
@@ -567,6 +603,20 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async deleteCollection(id: string, companyId: string): Promise<boolean> {
+    const result = await db
+      .delete(collections)
+      .where(and(eq(collections.id, id), eq(collections.companyId, companyId)));
+    return result.rowCount > 0;
+  }
+
+  async deleteAllCollections(companyId: string): Promise<number> {
+    const result = await db
+      .delete(collections)
+      .where(eq(collections.companyId, companyId));
+    return result.rowCount || 0;
+  }
+
   async getCollectionsByStatus(status: string): Promise<Collection[]> {
     return db.select().from(collections).where(eq(collections.status, status));
   }
@@ -593,6 +643,20 @@ export class DatabaseStorage implements IStorage {
       .where(eq(customers.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteCustomer(id: string, companyId: string): Promise<boolean> {
+    const result = await db
+      .delete(customers)
+      .where(and(eq(customers.id, id), eq(customers.companyId, companyId)));
+    return result.rowCount > 0;
+  }
+
+  async deleteAllCustomers(companyId: string): Promise<number> {
+    const result = await db
+      .delete(customers)
+      .where(eq(customers.companyId, companyId));
+    return result.rowCount || 0;
   }
 
   // Salespeople
