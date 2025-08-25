@@ -61,36 +61,133 @@ function parseExcel(buffer: Buffer): any[] {
   }
 }
 
+// Function to parse Chilean numbers (1.000,22)
+function parseChileanNumber(value: string | number): number {
+  if (typeof value === 'number') return value;
+  if (!value) return 0;
+  
+  let cleanString = String(value).trim();
+  
+  // If contains dot and comma, Chilean format (1.000,22)
+  if (cleanString.includes('.') && cleanString.includes(',')) {
+    // Remove dots (thousands separator) and replace comma with decimal point
+    cleanString = cleanString.replace(/\./g, '').replace(',', '.');
+  }
+  // If only contains comma, could be Chilean decimal (22,50)
+  else if (cleanString.includes(',') && !cleanString.includes('.')) {
+    // If more than 3 digits after comma, it's thousands separator
+    const parts = cleanString.split(',');
+    if (parts.length === 2 && parts[1].length <= 2) {
+      // It's decimal: replace comma with point
+      cleanString = cleanString.replace(',', '.');
+    } else {
+      // It's thousands separator: remove commas
+      cleanString = cleanString.replace(/,/g, '');
+    }
+  }
+  // If contains only dot and more than 2 decimals, it's thousands separator
+  else if (cleanString.includes('.')) {
+    const parts = cleanString.split('.');
+    if (parts.length > 2 || (parts.length === 2 && parts[1].length > 2)) {
+      // It's thousands separator: remove dots
+      cleanString = cleanString.replace(/\./g, '');
+    }
+  }
+  
+  return parseFloat(cleanString) || 0;
+}
+
 // Product validation
 function validateProduct(record: any): InsertProduct | null {
   try {
     const transformed = {
       sku: record.sku || record.SKU || `PROD-${Date.now()}`,
-      name: record.name || record.producto || record.product_name || 'Producto sin nombre',
-      categoryId: record.categoryId || record.category_id || null,
-      supplierId: record.supplierId || record.supplier_id || null,
-      warehouseId: record.warehouseId || record.warehouse_id || null,
-      price: parseFloat(record.price || record.precio_venta || record.selling_price || 0) + '',
-      costPrice: parseFloat(record.costPrice || record.cost_price || record.precio_costo || 0) + '',
-      stock: parseInt(record.stock || record.cantidad || record.current_stock || 0),
+      name: record.name || record.nombre || record.producto || record.product_name || 'Producto sin nombre',
+      categoryId: record.categoryId || record.category_id || record.categoria || null,
+      supplierId: record.supplierId || record.supplier_id || record.proveedor || null,
+      warehouseId: record.warehouseId || record.warehouse_id || record.almacen || null,
+      price: parseChileanNumber(record.price || record.precio_venta || record.selling_price || 0) + '',
+      costPrice: parseChileanNumber(record.costPrice || record.cost_price || record.precio_costo || 0) + '',
+      stock: parseInt(record.stock || record.stock_actual || record.cantidad || record.current_stock || 0),
       minStock: parseInt(record.minStock || record.min_stock || record.stock_minimo || 10),
       maxStock: parseInt(record.maxStock || record.max_stock || record.stock_maximo || 1000),
       reorderPoint: parseInt(record.reorderPoint || record.reorder_point || record.punto_reorden || 15),
       location: record.location || record.ubicacion || '',
-      unitMeasure: record.unitMeasure || record.unit_measure || record.unidad || 'unidad',
+      unitMeasure: record.unitMeasure || record.unit_measure || record.unidad_medida || record.unidad || 'unidad',
       description: record.description || record.descripcion || '',
-      isActive: record.isActive !== 'false' && record.is_active !== 'false'
+      isActive: record.isActive !== 'false' && record.is_active !== 'false' && record.estado !== 'inactive'
     };
 
     return insertProductSchema.parse(transformed);
   } catch (error) {
-    console.error('Product validation error:', error);
+    console.error('Product validation error:', error, 'Record:', record);
     return null;
   }
 }
 
 export function registerDataIngestionRoutes(app: Express) {
   // Simple product import endpoint
+  // Import products endpoint (frontend expects /api/import/products)
+  app.post("/api/import/products", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: "No file uploaded" });
+      }
+
+      let records: any[] = [];
+      
+      // Parse file based on type
+      if (req.file.mimetype === 'text/csv') {
+        records = await parseCSV(req.file.buffer);
+      } else if (req.file.mimetype.includes('excel') || req.file.mimetype.includes('spreadsheet')) {
+        records = parseExcel(req.file.buffer);
+      } else if (req.file.mimetype === 'application/json') {
+        const jsonData = JSON.parse(req.file.buffer.toString());
+        records = Array.isArray(jsonData) ? jsonData : jsonData.records || [];
+      }
+
+      const results = {
+        total: records.length,
+        successful: 0,
+        failed: 0,
+        errors: [] as string[]
+      };
+
+      // Process each record
+      for (let i = 0; i < records.length; i++) {
+        const validProduct = validateProduct(records[i]);
+        if (validProduct) {
+          try {
+            // Set company ID for the product
+            const productWithCompany = { ...validProduct, companyId: 'demo-company-123' };
+            await storage.createProduct(productWithCompany);
+            results.successful++;
+          } catch (error) {
+            results.failed++;
+            results.errors.push(`Row ${i + 1}: ${error}`);
+          }
+        } else {
+          results.failed++;
+          results.errors.push(`Row ${i + 1}: Invalid product data`);
+        }
+      }
+
+      res.json({
+        success: true,
+        imported: results.successful,
+        message: `Se importaron ${results.successful} registros de products.`,
+        results
+      });
+
+    } catch (error) {
+      console.error("Product import error:", error);
+      res.status(500).json({ 
+        success: false,
+        error: error instanceof Error ? error.message : "Import failed" 
+      });
+    }
+  });
+
   app.post("/api/data-ingestion/products", upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {

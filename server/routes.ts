@@ -12,6 +12,9 @@ import {
 import { aiService } from "./ai-service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register data ingestion routes
+  registerDataIngestionRoutes(app);
+  
   // Dashboard Analytics
   app.get("/api/dashboard/analytics", async (req, res) => {
     try {
