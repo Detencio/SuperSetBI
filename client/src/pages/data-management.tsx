@@ -62,8 +62,34 @@ export default function DataManagement() {
     failed: 0
   });
 
+  // Controlador para cancelar la importación
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+
+  // Función para cancelar la importación
+  const cancelImport = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+    }
+    setImportProgress(prev => ({
+      ...prev,
+      isImporting: false,
+      message: 'Importación cancelada por el usuario'
+    }));
+    
+    toast({
+      title: "🚫 Importación Cancelada",
+      description: "La importación fue cancelada exitosamente.",
+      variant: "default",
+    });
+  };
+
   // Función para importar con progreso en tiempo real
   const importFileWithProgress = async (file: File, type: string) => {
+    // Crear nuevo AbortController
+    const controller = new AbortController();
+    setAbortController(controller);
+    
     setImportProgress({
       isImporting: true,
       percentage: 0,
@@ -81,6 +107,7 @@ export default function DataManagement() {
       const response = await fetch(`/api/import/${type}`, {
         method: 'POST',
         body: formData,
+        signal: controller.signal, // Agregar signal para cancelación
       });
 
       if (!response.ok) {
@@ -120,6 +147,7 @@ export default function DataManagement() {
                     percentage: 100,
                     message: data.message
                   }));
+                  setAbortController(null); // Limpiar controlador
                   
                   toast({
                     title: "✅ Importación Exitosa",
@@ -128,6 +156,7 @@ export default function DataManagement() {
                   });
                 } else if (data.type === 'error') {
                   setImportProgress(prev => ({ ...prev, isImporting: false }));
+                  setAbortController(null); // Limpiar controlador
                   
                   toast({
                     title: "❌ Error en Importación",
@@ -142,8 +171,15 @@ export default function DataManagement() {
           }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       setImportProgress(prev => ({ ...prev, isImporting: false }));
+      setAbortController(null); // Limpiar controlador
+      
+      // Si fue cancelado por el usuario, no mostrar error
+      if (error.name === 'AbortError') {
+        return; // El mensaje de cancelación ya se mostró en cancelImport()
+      }
+      
       toast({
         title: "❌ Error en Importación",
         description: "Ocurrió un problema al importar el archivo. Verifica el formato.",
@@ -386,9 +422,19 @@ export default function DataManagement() {
                                     Importando datos...
                                   </span>
                                 </div>
-                                <span className="text-sm font-mono text-blue-700 dark:text-blue-300">
-                                  {importProgress.percentage}%
-                                </span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm font-mono text-blue-700 dark:text-blue-300">
+                                    {importProgress.percentage}%
+                                  </span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={cancelImport}
+                                    className="h-7 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </div>
                               </div>
                               
                               <Progress value={importProgress.percentage} className="h-2" />
